@@ -1,17 +1,17 @@
-;; `no-check` to disable conflicting contracts with (hasheq) when imported by untyped
-;; Module works fine on its own. Turn on manually to check sometimes.
-#lang typed/racket/base/no-check
+#lang typed/racket/base
 
 (require racket/match
          racket/set
          racket/list
-         racket/string)
+         racket/string
+         typed/racket/unsafe)
 
-(provide update-Call-Histories
-         call-histories
-         enforcing-termination?
-         custom-<?
-         check-interval)
+;; `unsafe-provide` to get around `hash-equal?` contract for `hasheq`
+(unsafe-provide enforcing-termination?
+                custom-<?
+                check-interval
+                call-histories
+                update-Call-Histories)
 
 ;; A size-change graph tracks how a function call "transitions" to itself,
 ;; where each edge denotes a "must" non-ascendence
