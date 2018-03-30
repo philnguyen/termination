@@ -5,8 +5,7 @@
 (require racket/match
          racket/set
          racket/list
-         racket/string
-         unreachable)
+         racket/string)
 
 (provide update-Call-Histories
          call-histories
