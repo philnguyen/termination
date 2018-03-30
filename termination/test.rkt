@@ -30,7 +30,7 @@
      [(0 n) (+ 1 n)]
      [(m 0) (a (- m 1) 1)]
      [(m n) (a (- m 1) (a m (- n 1)))]))
-  ((terminating-function/c a) 3 1))
+  (begin/termination (a 3 1)))
 
 ;; Ex-4: permuted parameters
 (let ()
@@ -68,11 +68,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (let () ; decreasing on `y` can't fool the checker
-  (define/termination (f x y)
+  (define (f x y)
     (if (zero? x)
         42
-        (f (sub1 y) (add1 x)))) 
-  (check-exn exn? (λ () (f 3 3))))
+        (f (sub1 y) (add1 x))))
+  
+  (check-exn exn? (λ () (begin/termination (f 3 3)))))
 
 (let () ; factorial ok on naturals, diverges and killed on negatives
   (define/termination (fact n) (if (zero? n) 1 (* n (fact (sub1 n)))))
@@ -80,19 +81,19 @@
   (check-exn exn? (λ () (fact -1))))
 
 (let ()
-  (define/termination (quicksort l)
+  (define (quicksort l)
     (let go ([l l])
       (match l
         [(cons x xs)
          (define-values (<xs ≥xs) (partition (curry < x) xs))
          (append (go <xs) (list x) (go ≥xs))]
         ['() '()])))
-  (define/termination (quicksort:incorrect l)
+  (define (quicksort:incorrect l)
     (let go ([l l])
       (match l
         [(cons x xs)
          (define-values (<xs ≥xs) (partition (curry < x) xs))
          (append (go <xs) (go (cons x ≥xs)))]
         ['() '()])))
-  (quicksort '(1 1 1 1 1))
-  (check-exn exn? (λ () (quicksort:incorrect '(1 1 1 1 1)))))
+  (begin/termination (quicksort '(1 1 1 1 1)))
+  (check-exn exn? (λ () (begin/termination (quicksort:incorrect '(1 1 1 1 1))))))

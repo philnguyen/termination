@@ -3,7 +3,7 @@
 (provide (rename-out [-app #%app])
          terminating-function/c
          define/termination
-         #;begin/termination ; does't work for some reason
+         begin/termination
          )
 
 (require (for-syntax racket/base
@@ -22,7 +22,7 @@
 
 ;; This doesn't work for some reason
 (define-syntax-rule (begin/termination e ...)
-  (#%app (terminating-function (λ () e ...))))
+  (-app (terminating-function (λ () e ...))))
 
 (define-syntax-rule (with-call-monitored (f x ...) e ...)
   (parameterize ([call-histories (update-Call-Histories (call-histories) f (list x ...))])
