@@ -25,7 +25,7 @@
   (#%app (terminating-function (λ () e ...))))
 
 (define-syntax-rule (with-call-monitored (f x ...) e ...)
-  (parameterize ([call-histories (update-Call-Histories (call-histories) f (vector-immutable x ...))])
+  (parameterize ([call-histories (update-Call-Histories (call-histories) f (list x ...))])
     e ...))
 
 (define-syntax -app

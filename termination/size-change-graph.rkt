@@ -24,7 +24,7 @@
 ;; - change-graphs: observed ways in which the function transitions to itself
 ;; - count-down: how many calls to this function before it is checked again
 (struct Call-History ([count-down : Positive-Integer]
-                      [last-arguments : (Vectorof Any)]
+                      [last-arguments : (Listof Any)]
                       [change-graphs : (Setof Size-Change-Graph)]) #:transparent)
 
 ;; Call-Histories is a table tracking all function calls in the current call-chain
@@ -40,7 +40,7 @@
 ;; When termination checking starts, it always pushs an entry to the table.
 (define (enforcing-termination?) (not (hash-empty? (call-histories)))) 
 
-(: update-Call-Histories : Call-Histories Procedure (Vectorof Any) → Call-Histories)
+(: update-Call-Histories : Call-Histories Procedure (Listof Any) → Call-Histories)
 ;; Update function `f`'s call history, accumulating observed ways in which it transitions to itself
 (define (update-Call-Histories M f xs)
   (match (hash-ref M f #f)
@@ -53,11 +53,11 @@
           (hash-set M f (Call-History (check-interval) xs Gs*))])]
     [#f
      ;; First observed arguements. Assume they have strictly descended from "infinity"
-     (define G₀ (for/hash : Size-Change-Graph ([i (in-range (vector-length xs))])
+     (define G₀ (for/hash : Size-Change-Graph ([i (in-range (length xs))])
                   (values (cons i i) '↓)))
      (hash-set M f (Call-History (check-interval) xs (refl-trans {set G₀})))]))
 
-(: ensure-size-change-termination : (Setof Size-Change-Graph) Procedure (Vectorof Any) (Vectorof Any) → Void)
+(: ensure-size-change-termination : (Setof Size-Change-Graph) Procedure (Listof Any) (Listof Any) → Void)
 (define (ensure-size-change-termination Gs f xs₀ xs)
   (match (size-change-violation? Gs)
     [(? values G)
@@ -119,7 +119,7 @@
               #:when (equal? t₁ s₂))
     (hash-update G* (cons s₁ t₂) (λ ([↝₀ : Dec]) (Dec-best ↝₀ (Dec-best ↝₁ ↝₂))) (λ () '↧))))
 
-(: mk-graph : (Vectorof Any) (Vectorof Any) → Size-Change-Graph)
+(: mk-graph : (Listof Any) (Listof Any) → Size-Change-Graph)
 ;; Make size-change graph from comparing old and new argument lists
 (define (mk-graph xs₀ xs₁)
   (for*/hash : Size-Change-Graph ([(v₀ i₀) (in-indexed xs₀)]
