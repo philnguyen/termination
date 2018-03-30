@@ -4,8 +4,7 @@
 
 (define deps '("base"
                "typed-racket-lib"
-               "typed-racket-more"
-               "typed-struct-props"))
+               "typed-racket-more"))
 
 (define pkg-desc "Modified Racket that supports dynamic enforcement of termination")
 
