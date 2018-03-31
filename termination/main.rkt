@@ -20,7 +20,6 @@
 (define-syntax-rule (define/termination (f x ...) e)
   (define f (terminating-function (λ (x ...) e))))
 
-;; This doesn't work for some reason
 (define-syntax-rule (begin/termination e ...)
   (-app (terminating-function (λ () e ...))))
 

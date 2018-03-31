@@ -6,7 +6,7 @@
          racket/string
          typed/racket/unsafe)
 
-;; `unsafe-provide` to get around `hash-equal?` contract for `hasheq`
+;; `unsafe-provide` to get around contracts messing with functions as hash-table keys
 (unsafe-provide enforcing-termination?
                 custom-<?
                 check-interval
@@ -43,22 +43,23 @@
 (: update-Call-Histories : Call-Histories Procedure (Listof Any) → Call-Histories)
 ;; Update function `f`'s call history, accumulating observed ways in which it transitions to itself
 (define (update-Call-Histories M f xs)
-  (match (hash-ref M f #f)
-    [(Call-History n₀ xs₀ Gs₀)
-     (match (sub1 n₀)
-       [(? positive? n) (hash-set M f (Call-History n xs₀ Gs₀))]
-       [0 (define G (mk-graph xs₀ xs))
-          (define Gs* (refl-trans (set-add Gs₀ G)))
-          (ensure-size-change-termination Gs* f xs₀ xs) 
-          (hash-set M f (Call-History (check-interval) xs Gs*))])]
-    [#f
-     ;; First observed arguements. Assume they have strictly descended from "infinity"
-     (define G₀ (for/hash : Size-Change-Graph ([i (in-range (length xs))])
-                  (values (cons i i) '↓)))
-     (hash-set M f (Call-History (check-interval) xs (refl-trans {set G₀})))]))
+  (define new-history
+    (match (hash-ref M f #f)
+      [(Call-History (app sub1 n) xs₀ Gs₀)
+       (if (positive? n)
+           (Call-History n xs₀ Gs₀)
+           (let ([Gs* (refl-trans (set-add Gs₀ (mk-graph xs₀ xs)))])
+             (ensure-size-change-terminating Gs* f xs₀ xs)
+             (Call-History (check-interval) xs Gs*)))]
+      [#f ; First observed arguements. Assume they have strictly descended from "infinity"
+       (define G₀ (for/hash : Size-Change-Graph ([i (in-range (length xs))])
+                    (values (cons i i) '↓)))
+       (Call-History (check-interval) xs (refl-trans {set G₀}))]))
+  (hash-set M f new-history))
 
-(: ensure-size-change-termination : (Setof Size-Change-Graph) Procedure (Listof Any) (Listof Any) → Void)
-(define (ensure-size-change-termination Gs f xs₀ xs)
+(: ensure-size-change-terminating : (Setof Size-Chang
+                                           e-Graph) Procedure (Listof Any) (Listof Any) → Void)
+(define (ensure-size-change-terminating Gs f xs₀ xs)
   (match (size-change-violation? Gs)
     [(? values G)
      (define lines
@@ -103,7 +104,7 @@
                (for*/set: : (Setof Size-Change-Graph) ([G₁ : Size-Change-Graph (in-set Gs)]
                                                        [G₂ : Size-Change-Graph (in-set Gs)])
                  (compose-graph G₁ G₂))))
-  (let fix ([Gs : (Setof Size-Change-Graph) Gs])
+  (let fix ([Gs Gs])
     (define Gs* (trans Gs))
     (if (equal? Gs* Gs) Gs (fix Gs*))))
 
@@ -117,7 +118,7 @@
               [s₂ (in-value (car edge₂))]
               [t₂ (in-value (cdr edge₂))]
               #:when (equal? t₁ s₂))
-    (hash-update G* (cons s₁ t₂) (λ ([↝₀ : Dec]) (Dec-best ↝₀ (Dec-best ↝₁ ↝₂))) (λ () '↧))))
+    (hash-update G* (cons s₁ t₂) (λ ([↝₀ : Dec]) (Dec-best ↝₀ ↝₁ ↝₂)) (λ () '↧))))
 
 (: mk-graph : (Listof Any) (Listof Any) → Size-Change-Graph)
 ;; Make size-change graph from comparing old and new argument lists
@@ -138,10 +139,9 @@
     [(V V) '↧]
     [((? exact-nonnegative-integer? m) (? exact-nonnegative-integer? n)) #:when (> m n) '↓]
     [((cons V₁ V₂) V) #:when (or (cmp V₁ V) (cmp V₂ V)) '↓]
-    [(V₁ V₂) #:when ((custom-<?) V₁ V₂) '↓]
-    [(_ _) #f]))
+    [(V₁ V₂) (and ((custom-<?) V₁ V₂) '↓)]))
 
-(define Dec-best : (Dec Dec → Dec)
-  (match-lambda**
-   [('↧ '↧) '↧]
-   [(_ _) '↓]))
+(define Dec-best : (Dec * → Dec)
+  (match-lambda*
+   [(list '↧ ...) '↧]
+   [_ '↓]))
