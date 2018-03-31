@@ -23,7 +23,7 @@
 ;; - last-arguments: the most recent argument list in the call stack
 ;; - change-graphs: observed ways in which the function transitions to itself
 ;; - count-down: how many calls to this function before it is checked again
-(struct Call-History ([count-down : Positive-Integer]
+(struct Call-History ([count-down : Positive-Index]
                       [last-arguments : (Listof Any)]
                       [change-graphs : (Setof Size-Change-Graph)]) #:transparent)
 
@@ -33,7 +33,7 @@
 (define Empty-Call-Histories ((inst hasheq Procedure Call-History)))
 
 (define call-histories : (Parameterof Call-Histories) (make-parameter Empty-Call-Histories))
-(define check-interval : (Parameterof Positive-Integer) (make-parameter 1))
+(define check-interval : (Parameterof Positive-Index) (make-parameter 1))
 (define custom-<? : (Parameterof (Any Any → Boolean)) (make-parameter (λ _ #f)))
 
 ;; The empty call-histories is absused as a "not checking" flag.
@@ -57,8 +57,7 @@
        (Call-History (check-interval) xs (refl-trans {set G₀}))]))
   (hash-set M f new-history))
 
-(: ensure-size-change-terminating : (Setof Size-Chang
-                                           e-Graph) Procedure (Listof Any) (Listof Any) → Void)
+(: ensure-size-change-terminating : (Setof Size-Change-Graph) Procedure (Listof Any) (Listof Any) → Void)
 (define (ensure-size-change-terminating Gs f xs₀ xs)
   (match (size-change-violation? Gs)
     [(? values G)
