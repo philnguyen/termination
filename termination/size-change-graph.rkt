@@ -78,7 +78,7 @@
                 (λ ([edge : (Pairof (Pairof Integer Integer) Dec)])
                   (match-define (cons (cons src tgt) ↝) edge)
                   (format "  - ~a ~a ~a" src ↝ tgt))
-                (hash->list G))))
+                (hash->list G*))))
             (set->list Gs))))
      (error 'possible-non-termination (string-join lines "\n"))]
     [_ (void)]))
