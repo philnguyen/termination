@@ -14,7 +14,7 @@
                 with-call-monitored)
 
 (define-simple-macro (define-parameter x:id (~literal :) T e)
-  (define x : (Parameterof T) (make-parameter e)))
+  (define x ((inst make-parameter T) e)))
 
 ;; A size-change graph tracks how a function call "transitions" to itself,
 ;; where each edge denotes a "must" non-ascendence
@@ -25,9 +25,7 @@
 ;; A function's call history tracks:
 ;; - last-arguments: the most recent argument list in the call stack
 ;; - change-graphs: observed ways in which the function transitions to itself
-;; - count-down: how many calls to this function before it is checked again
-(struct Call-History ([count-down : Positive-Index]
-                      [last-arguments : (Listof Any)]
+(struct Call-History ([last-arguments : (Listof Any)]
                       [change-graphs : (Setof Size-Change-Graph)]) #:transparent)
 
 ;; Call-Histories is a table tracking all function calls in the current call-chain
@@ -36,6 +34,8 @@
 (define Empty-Call-Histories ((inst hasheq Procedure Call-History)))
 
 (define-parameter call-histories : Call-Histories Empty-Call-Histories)
+(define-parameter count-downs : (Immutable-HashTable Procedure Positive-Integer) (hasheq))
+(define-parameter count-down-bases : (Immutable-HashTable Procedure Natural) (hasheq))
 (define-parameter check-interval : Positive-Index 1)
 (define-parameter custom-<? : (Any Any → Boolean) (λ _ #f))
 
@@ -45,24 +45,34 @@
 
 (: with-call-monitored (∀ (X) Procedure (Listof Any) (→ X) → X))
 (define (with-call-monitored f xs exec)
-  (parameterize ([call-histories (update-Call-Histories (call-histories) f xs)])
-    (exec)))
+  (define cd (count-downs))
+  (define cdb (count-down-bases))
+  (match (sub1 (hash-ref cd f (λ () 0)))
+    ;; Spare iterations
+    [(? positive? n)
+     (parameterize ([count-downs (hash-set cd f n)])
+       (exec))]
+    [_
+     (define b (cond [(hash-ref cdb f #f) => add1] [else 0]))
+     (define n (expt 2 b))
+     (parameterize ([count-down-bases (hash-set cdb f b)]
+                    [count-downs (hash-set cd f n)]
+                    [call-histories (update-Call-Histories (call-histories) f xs)])
+       (exec))]))
 
 (: update-Call-Histories : Call-Histories Procedure (Listof Any) → Call-Histories)
 ;; Update function `f`'s call history, accumulating observed ways in which it transitions to itself
 (define (update-Call-Histories M f xs)
   (define new-history
     (match (hash-ref M f #f)
-      [(Call-History (app sub1 n) xs₀ Gs₀)
-       (if (positive? n)
-           (Call-History n xs₀ Gs₀)
-           (let ([Gs* (refl-trans (set-add Gs₀ (mk-graph xs₀ xs)))])
-             (ensure-size-change-terminating Gs* f xs₀ xs)
-             (Call-History (check-interval) xs Gs*)))]
+      [(Call-History xs₀ Gs₀)
+       (define Gs* (refl-trans (set-add Gs₀ (mk-graph xs₀ xs))))
+       (ensure-size-change-terminating Gs* f xs₀ xs)
+       (Call-History xs Gs*)]
       [#f ; First observed arguements. Assume they have strictly descended from "infinity"
        (define G₀ (for/hash : Size-Change-Graph ([i (in-range (length xs))])
                     (values (cons i i) '↓)))
-       (Call-History (check-interval) xs (refl-trans {set G₀}))]))
+       (Call-History xs (refl-trans {set G₀}))]))
   (hash-set M f new-history))
 
 (: ensure-size-change-terminating : (Setof Size-Change-Graph) Procedure (Listof Any) (Listof Any) → Void)
