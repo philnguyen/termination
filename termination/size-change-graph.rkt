@@ -4,7 +4,8 @@
          racket/set
          racket/list
          racket/string
-         typed/racket/unsafe)
+         typed/racket/unsafe
+         syntax/parse/define)
 
 ;; `unsafe-provide` to get around contracts messing with functions as hash-table keys
 (unsafe-provide enforcing-termination?
@@ -12,6 +13,9 @@
                 check-interval
                 call-histories
                 update-Call-Histories)
+
+(define-simple-macro (define-parameter x:id (~literal :) T e)
+  (define x : (Parameterof T) (make-parameter e)))
 
 ;; A size-change graph tracks how a function call "transitions" to itself,
 ;; where each edge denotes a "must" non-ascendence
@@ -32,9 +36,9 @@
 (define-type Call-Histories (Immutable-HashTable Procedure Call-History))
 (define Empty-Call-Histories ((inst hasheq Procedure Call-History)))
 
-(define call-histories : (Parameterof Call-Histories) (make-parameter Empty-Call-Histories))
-(define check-interval : (Parameterof Positive-Index) (make-parameter 1))
-(define custom-<? : (Parameterof (Any Any → Boolean)) (make-parameter (λ _ #f)))
+(define-parameter call-histories : Call-Histories Empty-Call-Histories)
+(define-parameter check-interval : Positive-Index 1)
+(define-parameter custom-<? : (Any Any → Boolean) (λ _ #f))
 
 ;; The empty call-histories is absused as a "not checking" flag.
 ;; When termination checking starts, it always pushs an entry to the table.
