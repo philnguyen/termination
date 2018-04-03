@@ -23,10 +23,6 @@
 (define-syntax-rule (begin/termination e ...)
   (-app (terminating-function (λ () e ...))))
 
-(define-syntax-rule (with-call-monitored (f x ...) e ...)
-  (parameterize ([call-histories (update-Call-Histories (call-histories) f (list x ...))])
-    e ...))
-
 (define-syntax -app
   (syntax-parser
     [(_ fun arg ...)
@@ -36,9 +32,9 @@
            (cond
              [(terminating-function? f)
               (let ([f* (terminating-function-unwrapped f)])
-                (with-call-monitored (f* x ...)
-                  (#%app f* x ...)))]
+                (with-call-monitored f* (list x ...)
+                  (λ () (#%app f* x ...))))]
              [(enforcing-termination?)
-              (with-call-monitored (f x ...)
-                (#%app f x ...))]
+              (with-call-monitored f (list x ...)
+                (λ () (#%app f x ...)))]
              [else (#%app f x ...)])))]))

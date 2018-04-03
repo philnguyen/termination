@@ -11,8 +11,7 @@
 (unsafe-provide enforcing-termination?
                 custom-<?
                 check-interval
-                call-histories
-                update-Call-Histories)
+                with-call-monitored)
 
 (define-simple-macro (define-parameter x:id (~literal :) T e)
   (define x : (Parameterof T) (make-parameter e)))
@@ -42,7 +41,12 @@
 
 ;; The empty call-histories is absused as a "not checking" flag.
 ;; When termination checking starts, it always pushs an entry to the table.
-(define (enforcing-termination?) (not (hash-empty? (call-histories)))) 
+(define (enforcing-termination?) (not (hash-empty? (call-histories))))
+
+(: with-call-monitored (∀ (X) Procedure (Listof Any) (→ X) → X))
+(define (with-call-monitored f xs exec)
+  (parameterize ([call-histories (update-Call-Histories (call-histories) f xs)])
+    (exec)))
 
 (: update-Call-Histories : Call-Histories Procedure (Listof Any) → Call-Histories)
 ;; Update function `f`'s call history, accumulating observed ways in which it transitions to itself
