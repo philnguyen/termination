@@ -26,7 +26,7 @@
 ;; - last-arguments: the most recent argument list in the call stack
 ;; - change-graphs: observed ways in which the function transitions to itself
 (struct Call-History ([last-arguments : (Listof Any)]
-                      [change-graphs : (Setof Size-Change-Graph)]) #:transparent)
+                      [change-graph : Size-Change-Graph]) #:transparent)
 
 ;; Call-Histories is a table tracking all function calls in the current call-chain
 ;; starting where a termination-contract is triggered
@@ -69,73 +69,48 @@
           (exec))])]
     [_
      (parameterize ([call-stack (hash-set cs f cs)])
-       (exec))])
-  )
+       (exec))]))
 
 (: update-Call-Histories : Call-Histories Procedure (Listof Any) → Call-Histories)
 ;; Update function `f`'s call history, accumulating observed ways in which it transitions to itself
 (define (update-Call-Histories M f xs)
   (define new-history
     (match (hash-ref M f #f)
-      [(Call-History xs₀ Gs₀)
-       (define Gs* (refl-trans (set-add Gs₀ (mk-graph xs₀ xs))))
-       (ensure-size-change-terminating Gs* f xs₀ xs)
-       (Call-History xs Gs*)]
+      [(Call-History xs₀ G₀)
+       (define G (mk-graph xs₀ xs))
+       (if (strictly-descending? G)
+           (let ([G* (compose-graph G₀ G)])
+             (if (strictly-descending? G*)
+                 (Call-History xs G*)
+                 (err G* f xs₀ xs)))
+           (err G f xs₀ xs))]
       [#f ; First observed arguements. Assume they have strictly descended from "infinity"
        (define G₀ (for/hash : Size-Change-Graph ([i (in-range (length xs))])
                     (values (cons i i) '↓)))
-       (Call-History xs (refl-trans {set G₀}))]))
+       (Call-History xs G₀)]))
   (hash-set M f new-history))
 
-(: ensure-size-change-terminating : (Setof Size-Change-Graph) Procedure (Listof Any) (Listof Any) → Void)
-(define (ensure-size-change-terminating Gs f xs₀ xs)
-  (match (size-change-violation? Gs)
-    [(? values G)
-     (define lines
-       `(,(format "Recursive call to `~a` has no obvious descendence on any argument" f)
-         ,(format "- Preceding call:")
-         ,@(for/list : (Listof String) ([(x i) (in-indexed xs₀)])
-             (format "  * arg ~a: ~a" i x))
-         ,(format "- Subsequent call:")
-         ,@(for/list : (Listof String) ([(x i) (in-indexed xs)])
-             (format "  * arg ~a: ~a" i x))
-         ,"Size-change graphs:"
-         ,@(append-map
-            (λ ([G* : Size-Change-Graph])
-              (cons
-               (if (equal? G* G) (format "- Troublesome graph:") (format "- Graph:"))
-               (map
-                (λ ([edge : (Pairof (Pairof Integer Integer) Dec)])
-                  (match-define (cons (cons src tgt) ↝) edge)
-                  (format "  - ~a ~a ~a" src ↝ tgt))
-                (hash->list G*))))
-            (set->list Gs))))
-     (error 'possible-non-termination (string-join lines "\n"))]
-    [_ (void)]))
+(: err : Size-Change-Graph Procedure (Listof Any) (Listof Any) → Nothing)
+(define (err G f xs₀ xs)
+  (define lines
+    `(,(format "Recursive call to `~a` has no obvious descendence on any argument" f)
+      ,(format "- Preceding call:")
+      ,@(for/list : (Listof String) ([(x i) (in-indexed xs₀)])
+          (format "  * arg ~a: ~a" i x))
+      ,(format "- Subsequent call:")
+      ,@(for/list : (Listof String) ([(x i) (in-indexed xs)])
+          (format "  * arg ~a: ~a" i x))
+      ,"Accumulated size-change graph:"
+      ,@(map
+         (λ ([edge : (Pairof (Pairof Integer Integer) Dec)])
+           (match-define (cons (cons src tgt) ↝) edge)
+           (format "  - ~a ~a ~a" src ↝ tgt))
+         (hash->list G))))
+  (error 'possible-non-termination (string-join lines "\n")))
 
-(: size-change-violation? : (Setof Size-Change-Graph) → (Option Size-Change-Graph))
-;; Step 2 in Algorithm in section 3.2
-;; Search for one possible transition whose infinite repetition would decrease no argument
-(define (size-change-violation? Gs)
-  (for/or : (Option Size-Change-Graph) ([G : Size-Change-Graph (in-set Gs)])
-    (and (equal? G (compose-graph G G))
-         (not (for/or : Boolean ([(edge ↝) (in-hash G)])
-                (match* (edge ↝)
-                  [((cons i i) '↓) #t]
-                  [(_ _) #f])))
-         G)))
-
-(: refl-trans : (Setof Size-Change-Graph) → (Setof Size-Change-Graph))
-;; Step 1 in Algorithm in section 3.2
-(define (refl-trans Gs)
-  (define (trans [Gs : (Setof Size-Change-Graph)])
-    (set-union Gs
-               (for*/set: : (Setof Size-Change-Graph) ([G₁ : Size-Change-Graph (in-set Gs)]
-                                                       [G₂ : Size-Change-Graph (in-set Gs)])
-                 (compose-graph G₁ G₂))))
-  (let fix ([Gs Gs])
-    (define Gs* (trans Gs))
-    (if (equal? Gs* Gs) Gs (fix Gs*))))
+(: strictly-descending? : Size-Change-Graph → Boolean)
+(define (strictly-descending? G)
+  (for/or : Boolean ([d (in-hash-values G)]) (eq? d '↓)))
 
 (: compose-graph : Size-Change-Graph Size-Change-Graph → Size-Change-Graph)
 (define (compose-graph G₁ G₂)

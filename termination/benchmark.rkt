@@ -29,7 +29,8 @@
 (begin
   (gc) (time (void ((terminating-function/c a) 3 5)))
   (gc) (time (void ((terminating-function/c fact) 10000)))
-  (gc) (time (void ((terminating-function/c rev) l))))
+  (gc) (time (void ((terminating-function/c rev) l)))
+  )
 
 
 ; No termination check
@@ -56,3 +57,8 @@
 ; cpu time: 93 real time: 90 gc time: 0
 ; cpu time: 109 real time: 115 gc time: 15
 ; cpu time: 32 real time: 32 gc time: 0
+
+; Get rid of naive `refl-trans` loop
+; cpu time: 31 real time: 32 gc time: 0
+; cpu time: 125 real time: 115 gc time: 0
+; cpu time: 31 real time: 31 gc time: 0
