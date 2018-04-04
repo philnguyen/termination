@@ -12,8 +12,12 @@ raco pkg install termination
 ### Usage
 
 * `(terminating-function/c e)`: ensures `e` computes a function that run finitely on any argument
-* `(define/termination (f x ...) e ...)`: shorthand for `(define f (terminating-function/c (λ (x ...) e ...)))`
-* `(begin/termination e ...)`: shorthand for `((terminating-function/c (λ () e ...)))`
+* `(define/termination (f x ...) e ...)`: shorthand for `(define f (terminating-function/c (Î» (x ...) e ...)))`
+* `(begin/termination e ...)`: shorthand for `((terminating-function/c (Î» () e ...)))`
+
+Programmer can provide a custom well-founded partial order through parameter `custom-<?`,
+which is by default `(λ (lhs rhs) #f)`.
+It is on them to ensure the predicate is correct.
 
 ### Examples
 

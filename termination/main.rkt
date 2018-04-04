@@ -4,6 +4,7 @@
          terminating-function/c
          define/termination
          begin/termination
+         custom-<?
          )
 
 (require (for-syntax racket/base
