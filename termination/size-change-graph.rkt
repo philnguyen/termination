@@ -163,12 +163,11 @@
 ;; - `↓` is definite descendence
 ;; - '↧` is definite non-ascendence
 ;; - `#f` is conservative "don't know"
-(define cmp
-  (match-lambda**
-    [(V V) '↧]
-    [((? exact-nonnegative-integer? m) (? exact-nonnegative-integer? n)) #:when (> m n) '↓]
-    [((cons V₁ V₂) V) #:when (or (cmp V₁ V) (cmp V₂ V)) '↓]
-    [(V₁ V₂) (and ((custom-<?) V₁ V₂) '↓)]))
+(define (cmp x y)
+  (cond [(equal? x y) '↧]
+        [(and (integer? x) (integer? y) (> x y -1)) '↓]
+        [(and (pair? x) (or (cmp (car x) y) (cmp (cdr x) y))) '↓]
+        [else (and ((custom-<?) x y) '↓)]))
 
 (define Dec-best : (Dec * → Dec)
   (match-lambda*
