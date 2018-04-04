@@ -21,17 +21,15 @@
 (define-type Dec (U '↓ '↧))
 (define-type ?Dec (Option Dec)) ; ↓ ⊑ ↧ ⊑ #f
 
-;; A function's call history tracks:
-;; - last-arguments: the most recent call's arguments
-;; - change-graph: observed ways in which parameters have descended since the beginning
-(struct Call-History ([last-arguments : (Listof Any)]
-                      [change-graph : Size-Change-Graph]) #:transparent)
+(struct Call-History ([#|most recent call       |# last-arguments : (Listof Any)]
+                      [#|accumulated size change|# change-graph : Size-Change-Graph])
+  #:transparent)
 
 ;; Call-Histories is a table tracking all function calls in the current call-chain
 ;; starting where a termination-contract is triggered
 (define-type Call-Histories (Immutable-HashTable Procedure Call-History))
 
-;; Basically a linked list that supports constant-time `memq`
+;; Call-stack is (conceptually) linked list of functions that supports constant time `memq`
 (define-type Call-Stack (Immutable-HashTable Procedure Call-Stack))
 
 (define-parameter call-histories : Call-Histories (hasheq))
@@ -41,10 +39,11 @@
 (define-parameter custom-<? : (Any Any → Boolean) (λ _ #f))
 
 ;; The empty call-stack is absused as a "not checking" flag.
-;; When termination checking starts, it always pushs an entry to the table.
+;; When termination checking starts, it always pushes to the call-stack.
 (define (enforcing-termination?) (not (hash-empty? (call-stack))))
 
 (: with-call-monitored (∀ (X) Procedure (Listof Any) (→ X) → X))
+;; Mark size-change progress before executing the body
 (define (with-call-monitored f xs exec)
   (define cs (call-stack))
   (match (hash-ref cs f #f)
