@@ -11,6 +11,8 @@
 (unsafe-provide enforcing-termination?
                 custom-<?
                 with-call-monitored)
+(unsafe-require/typed rnrs/arithmetic/bitwise-6
+  [bitwise-bit-count (Positive-Integer → Index)])
 
 (define-simple-macro (define-parameter x:id (~literal :) T e)
   (define x ((inst make-parameter T) e)))
@@ -21,7 +23,7 @@
 (define-type Dec (U '↓ '↧))
 (define-type ?Dec (Option Dec)) ; ↓ ⊑ ↧ ⊑ #f
 
-(struct Call-Record ([#|most recent call       |# last-arguments : (Listof Any)]
+(struct Call-Record ([#|most recent call       |# last-args : (Listof Any)]
                      [#|accumulated size change|# change-graph : Size-Change-Graph])
   #:transparent)
 
@@ -30,8 +32,7 @@
 
 (define-parameter record-table : Record-Table (hasheq))
 (define-parameter call-stack : Call-Stack (hasheq))
-(define-parameter count-downs : (Immutable-HashTable Procedure Positive-Integer) (hasheq))
-(define-parameter count-down-bases : (Immutable-HashTable Procedure Natural) (hasheq))
+(define-parameter counts : (Immutable-HashTable Procedure Positive-Integer) (hasheq))
 (define-parameter custom-<? : (Any Any → Boolean) (λ _ #f))
 
 ;; The empty call-stack is absused as a "not checking" flag.
@@ -44,20 +45,14 @@
   (define cs (call-stack))
   (match (hash-ref cs f #f)
     [(? values cs₀) ; `f` is a loop entry
-     (define cd (count-downs))
-     (match (sub1 (hash-ref cd f (λ () 0)))
-       [(? positive? n) ; Spare more iterations
-        (parameterize ([call-stack (hash-set cs₀ f cs₀)]
-                       [count-downs (hash-set cd f n)])
-          (exec))]
-       [_
-        (define cdb (count-down-bases))
-        (define b (cond [(hash-ref cdb f #f) => add1] [else 0]))
-        (parameterize ([call-stack (hash-set cs₀ f cs₀)]
-                       [count-down-bases (hash-set cdb f b)]
-                       [count-downs (hash-set cd f (expt 2 b))]
-                       [record-table (update-Record-Table (record-table) f xs)])
-          (exec))])]
+     (define cnts (counts))
+     (define n (add1 (hash-ref cnts f (λ () 0))))
+     (parameterize ([call-stack (hash-set cs₀ f cs₀)]
+                    [counts (hash-set cnts f n)])
+       (if (= 1 (bitwise-bit-count n)) ; check at every power of 2
+           (parameterize ([record-table (update-Record-Table (record-table) f xs)])
+             (exec))
+           (exec)))]
     [_
      (parameterize ([call-stack (hash-set cs f cs)])
        (exec))]))
