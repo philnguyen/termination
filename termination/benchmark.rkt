@@ -32,17 +32,22 @@
   (gc) (time (void ((terminating-function/c rev) l))))
 
 
-;; no termination check
+; No termination check
 ; cpu time: 0 real time: 1 gc time: 0
 ; cpu time: 94 real time: 100 gc time: 0
 ; cpu time: 0 real time: 0 gc time: 0
 
-;; naive implementation
+; Naive implementation
 ; cpu time: 2985 real time: 2984 gc time: 32
 ; cpu time: 281 real time: 280 gc time: 79
 ; cpu time: 29078 real time: 29094 gc time: 0
 
-;; exponentially decreased checks
+; Exponentially decreased checks
 ; cpu time: 359 real time: 363 gc time: 0
 ; cpu time: 265 real time: 263 gc time: 32
 ; cpu time: 203 real time: 200 gc time: 15
+
+; Detect loop entry first
+; cpu time: 125 real time: 131 gc time: 0
+; cpu time: 109 real time: 119 gc time: 0
+; cpu time: 47 real time: 47 gc time: 0

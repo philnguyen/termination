@@ -31,9 +31,12 @@
 ;; Call-Histories is a table tracking all function calls in the current call-chain
 ;; starting where a termination-contract is triggered
 (define-type Call-Histories (Immutable-HashTable Procedure Call-History))
-(define Empty-Call-Histories ((inst hasheq Procedure Call-History)))
 
-(define-parameter call-histories : Call-Histories Empty-Call-Histories)
+;; Basically a linked list that supports constant-time `memq`
+(define-type Call-Stack (Immutable-HashTable Procedure Call-Stack))
+
+(define-parameter call-histories : Call-Histories (hasheq))
+(define-parameter call-stack : Call-Stack (hasheq))
 (define-parameter count-downs : (Immutable-HashTable Procedure Positive-Integer) (hasheq))
 (define-parameter count-down-bases : (Immutable-HashTable Procedure Natural) (hasheq))
 (define-parameter check-interval : Positive-Index 1)
@@ -41,24 +44,33 @@
 
 ;; The empty call-histories is absused as a "not checking" flag.
 ;; When termination checking starts, it always pushs an entry to the table.
-(define (enforcing-termination?) (not (hash-empty? (call-histories))))
+(define (enforcing-termination?) (not (hash-empty? (call-stack))))
 
 (: with-call-monitored (∀ (X) Procedure (Listof Any) (→ X) → X))
 (define (with-call-monitored f xs exec)
-  (define cd (count-downs))
-  (define cdb (count-down-bases))
-  (match (sub1 (hash-ref cd f (λ () 0)))
-    ;; Spare iterations
-    [(? positive? n)
-     (parameterize ([count-downs (hash-set cd f n)])
-       (exec))]
+  (define cs (call-stack))
+  (match (hash-ref cs f #f)
+    [(? values cs₀) ; looped
+     (define cd (count-downs))
+     (define cdb (count-down-bases))
+     (match (sub1 (hash-ref cd f (λ () 0)))
+       ;; Spare iterations
+       [(? positive? n)
+        (parameterize ([call-stack (hash-set cs₀ f cs₀)]
+                       [count-downs (hash-set cd f n)])
+          (exec))]
+       [_
+        (define b (cond [(hash-ref cdb f #f) => add1] [else 0]))
+        (define n (expt 2 b))
+        (parameterize ([call-stack (hash-set cs₀ f cs₀)]
+                       [count-down-bases (hash-set cdb f b)]
+                       [count-downs (hash-set cd f n)]
+                       [call-histories (update-Call-Histories (call-histories) f xs)])
+          (exec))])]
     [_
-     (define b (cond [(hash-ref cdb f #f) => add1] [else 0]))
-     (define n (expt 2 b))
-     (parameterize ([count-down-bases (hash-set cdb f b)]
-                    [count-downs (hash-set cd f n)]
-                    [call-histories (update-Call-Histories (call-histories) f xs)])
-       (exec))]))
+     (parameterize ([call-stack (hash-set cs f cs)])
+       (exec))])
+  )
 
 (: update-Call-Histories : Call-Histories Procedure (Listof Any) → Call-Histories)
 ;; Update function `f`'s call history, accumulating observed ways in which it transitions to itself
