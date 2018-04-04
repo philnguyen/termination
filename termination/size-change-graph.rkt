@@ -126,10 +126,12 @@
 ;; - '↧` is definite non-ascendence
 ;; - `#f` is conservative "don't know"
 (define (cmp x y)
-  (cond [(equal? x y) '↧]
-        [(and (integer? x) (integer? y) (> x y -1)) '↓]
-        [(and (pair? x) (or (cmp (car x) y) (cmp (cdr x) y))) '↓]
-        [else (and ((custom-<?) x y) '↓)]))
+  (define ≺ (custom-<?))
+  (let go ([x x] [y y])
+    (cond [(equal? x y) '↧]
+          [(and (integer? x) (integer? y) (> x y -1)) '↓]
+          [(and (pair? x) (or (go (car x) y) (go (cdr x) y))) '↓]
+          [else (and (≺ x y) '↓)])))
 
 (define Dec-best : (Dec * → Dec)
   (match-lambda*
