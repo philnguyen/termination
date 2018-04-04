@@ -51,3 +51,8 @@
 ; cpu time: 125 real time: 131 gc time: 0
 ; cpu time: 109 real time: 119 gc time: 0
 ; cpu time: 47 real time: 47 gc time: 0
+
+; Expansion-time optimization of known non-looping functions
+; cpu time: 93 real time: 90 gc time: 0
+; cpu time: 109 real time: 115 gc time: 15
+; cpu time: 32 real time: 32 gc time: 0

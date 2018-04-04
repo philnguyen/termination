@@ -23,8 +23,29 @@
 (define-syntax-rule (begin/termination e ...)
   (-app (terminating-function (λ () e ...))))
 
+(begin-for-syntax
+  (require racket/base)
+  (define-syntax-class fin
+    #:description "recognized terminating functions"
+    ;; TODO not working
+    ;; How to determine "primitive-ness" at compile time?
+    (pattern p:id #:when (with-handlers ([exn? (λ _ #f)])
+                           (primitive? (eval #'p))))
+    (pattern (~literal add1))
+    (pattern (~literal sub1))
+    (pattern (~literal null?))
+    (pattern (~literal cons))
+    (pattern (~literal car))
+    (pattern (~literal cdr))
+    (pattern (~literal +))
+    (pattern (~literal -))
+    (pattern (~literal *))
+    (pattern (~literal zero?))))
+
 (define-syntax -app
   (syntax-parser
+    [(_ fun:fin arg ...)
+     #'(#%app fun arg ...)]
     [(_ fun arg ...)
      (with-syntax ([(x ...) (generate-temporaries #'(arg ...))])
        #'(let ([f fun]
