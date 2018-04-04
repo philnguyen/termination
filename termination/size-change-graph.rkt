@@ -10,7 +10,6 @@
 ;; `unsafe-provide` to get around contracts messing with functions as hash-table keys
 (unsafe-provide enforcing-termination?
                 custom-<?
-                check-interval
                 with-call-monitored)
 
 (define-simple-macro (define-parameter x:id (~literal :) T e)
@@ -23,8 +22,8 @@
 (define-type ?Dec (Option Dec)) ; ↓ ⊑ ↧ ⊑ #f
 
 ;; A function's call history tracks:
-;; - last-arguments: the most recent argument list in the call stack
-;; - change-graphs: observed ways in which the function transitions to itself
+;; - last-arguments: the most recent call's arguments
+;; - change-graph: observed ways in which parameters have descended since the beginning
 (struct Call-History ([last-arguments : (Listof Any)]
                       [change-graph : Size-Change-Graph]) #:transparent)
 
@@ -39,10 +38,9 @@
 (define-parameter call-stack : Call-Stack (hasheq))
 (define-parameter count-downs : (Immutable-HashTable Procedure Positive-Integer) (hasheq))
 (define-parameter count-down-bases : (Immutable-HashTable Procedure Natural) (hasheq))
-(define-parameter check-interval : Positive-Index 1)
 (define-parameter custom-<? : (Any Any → Boolean) (λ _ #f))
 
-;; The empty call-histories is absused as a "not checking" flag.
+;; The empty call-stack is absused as a "not checking" flag.
 ;; When termination checking starts, it always pushs an entry to the table.
 (define (enforcing-termination?) (not (hash-empty? (call-stack))))
 
@@ -54,8 +52,7 @@
      (define cd (count-downs))
      (define cdb (count-down-bases))
      (match (sub1 (hash-ref cd f (λ () 0)))
-       ;; Spare iterations
-       [(? positive? n)
+       [(? positive? n) ; Spare more iterations
         (parameterize ([call-stack (hash-set cs₀ f cs₀)]
                        [count-downs (hash-set cd f n)])
           (exec))]
@@ -78,16 +75,12 @@
     (match (hash-ref M f #f)
       [(Call-History xs₀ G₀)
        (define G (mk-graph xs₀ xs))
-       (if (strictly-descending? G)
-           (let ([G* (compose-graph G₀ G)])
-             (if (strictly-descending? G*)
-                 (Call-History xs G*)
-                 (err G* f xs₀ xs)))
-           (err G f xs₀ xs))]
-      [#f ; First observed arguements. Assume they have strictly descended from "infinity"
-       (define G₀ (for/hash : Size-Change-Graph ([i (in-range (length xs))])
-                    (values (cons i i) '↓)))
-       (Call-History xs G₀)]))
+       (cond [(strictly-descending? G)
+              (define G* (compose-graph G₀ G))
+              (cond [(strictly-descending? G*) (Call-History xs G*)]
+                    [else (err G* f xs₀ xs)])]
+             [else (err G f xs₀ xs)])]
+      [#f (Call-History xs (init-size-change-graph (length xs)))]))
   (hash-set M f new-history))
 
 (: err : Size-Change-Graph Procedure (Listof Any) (Listof Any) → Nothing)
@@ -101,16 +94,22 @@
       ,@(for/list : (Listof String) ([(x i) (in-indexed xs)])
           (format "  * arg ~a: ~a" i x))
       ,"Accumulated size-change graph:"
-      ,@(map
-         (λ ([edge : (Pairof (Pairof Integer Integer) Dec)])
-           (match-define (cons (cons src tgt) ↝) edge)
-           (format "  - ~a ~a ~a" src ↝ tgt))
-         (hash->list G))))
+      ,@(for/list : (Listof String) ([(edge ↝) (in-hash G)])
+          (match-define (cons src tgt) edge)
+          (format "  - ~a ~a ~a" src ↝ tgt))))
   (error 'possible-non-termination (string-join lines "\n")))
 
 (: strictly-descending? : Size-Change-Graph → Boolean)
-(define (strictly-descending? G)
-  (for/or : Boolean ([d (in-hash-values G)]) (eq? d '↓)))
+(define (strictly-descending? G) (for/or : Boolean ([d (in-hash-values G)]) (eq? d '↓)))
+
+(: init-size-change-graph : Index → Size-Change-Graph)
+;; Initial size-change graph, where each argument have strictly descended from "infinity"
+(define init-size-change-graph
+  (let ([cache : (Mutable-HashTable Index Size-Change-Graph) (make-hasheq)])
+    (λ (n)
+      (hash-ref! cache n
+                 (λ () (for/hash : Size-Change-Graph ([i (in-range n)])
+                         (values (cons i i) '↓)))))))
 
 (: compose-graph : Size-Change-Graph Size-Change-Graph → Size-Change-Graph)
 (define (compose-graph G₁ G₂)
