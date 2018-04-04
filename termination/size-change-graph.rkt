@@ -15,24 +15,20 @@
 (define-simple-macro (define-parameter x:id (~literal :) T e)
   (define x ((inst make-parameter T) e)))
 
-;; A size-change graph tracks how a function call "transitions" to itself,
-;; where each edge denotes a "must" non-ascendence
+;; A size-change graph tracks how a function calls itself,
+;; where each edge denotes a "must" non-ascendence between argument indices
 (define-type Size-Change-Graph (Immutable-HashTable (Pairof Integer Integer) Dec))
 (define-type Dec (U '↓ '↧))
 (define-type ?Dec (Option Dec)) ; ↓ ⊑ ↧ ⊑ #f
 
-(struct Call-History ([#|most recent call       |# last-arguments : (Listof Any)]
-                      [#|accumulated size change|# change-graph : Size-Change-Graph])
+(struct Call-Record ([#|most recent call       |# last-arguments : (Listof Any)]
+                     [#|accumulated size change|# change-graph : Size-Change-Graph])
   #:transparent)
 
-;; Call-Histories is a table tracking all function calls in the current call-chain
-;; starting where a termination-contract is triggered
-(define-type Call-Histories (Immutable-HashTable Procedure Call-History))
-
-;; Call-stack is (conceptually) linked list of functions that supports constant time `memq`
+(define-type Record-Table (Immutable-HashTable Procedure Call-Record))
 (define-type Call-Stack (Immutable-HashTable Procedure Call-Stack))
 
-(define-parameter call-histories : Call-Histories (hasheq))
+(define-parameter record-table : Record-Table (hasheq))
 (define-parameter call-stack : Call-Stack (hasheq))
 (define-parameter count-downs : (Immutable-HashTable Procedure Positive-Integer) (hasheq))
 (define-parameter count-down-bases : (Immutable-HashTable Procedure Natural) (hasheq))
@@ -47,40 +43,39 @@
 (define (with-call-monitored f xs exec)
   (define cs (call-stack))
   (match (hash-ref cs f #f)
-    [(? values cs₀) ; looped
+    [(? values cs₀) ; `f` is a loop entry
      (define cd (count-downs))
-     (define cdb (count-down-bases))
      (match (sub1 (hash-ref cd f (λ () 0)))
        [(? positive? n) ; Spare more iterations
         (parameterize ([call-stack (hash-set cs₀ f cs₀)]
                        [count-downs (hash-set cd f n)])
           (exec))]
        [_
+        (define cdb (count-down-bases))
         (define b (cond [(hash-ref cdb f #f) => add1] [else 0]))
-        (define n (expt 2 b))
         (parameterize ([call-stack (hash-set cs₀ f cs₀)]
                        [count-down-bases (hash-set cdb f b)]
-                       [count-downs (hash-set cd f n)]
-                       [call-histories (update-Call-Histories (call-histories) f xs)])
+                       [count-downs (hash-set cd f (expt 2 b))]
+                       [record-table (update-Record-Table (record-table) f xs)])
           (exec))])]
     [_
      (parameterize ([call-stack (hash-set cs f cs)])
        (exec))]))
 
-(: update-Call-Histories : Call-Histories Procedure (Listof Any) → Call-Histories)
-;; Update function `f`'s call history, accumulating observed ways in which it transitions to itself
-(define (update-Call-Histories M f xs)
-  (define new-history
+(: update-Record-Table : Record-Table Procedure (Listof Any) → Record-Table)
+;; Update function `f`'s call record, accumulating observed ways in which it transitions to itself
+(define (update-Record-Table M f xs)
+  (define new-record
     (match (hash-ref M f #f)
-      [(Call-History xs₀ G₀)
+      [(Call-Record xs₀ G₀)
        (define G (mk-graph xs₀ xs))
        (cond [(strictly-descending? G)
               (define G* (compose-graph G₀ G))
-              (cond [(strictly-descending? G*) (Call-History xs G*)]
+              (cond [(strictly-descending? G*) (Call-Record xs G*)]
                     [else (err G* f xs₀ xs)])]
              [else (err G f xs₀ xs)])]
-      [#f (Call-History xs (init-size-change-graph (length xs)))]))
-  (hash-set M f new-history))
+      [#f (Call-Record xs (init-size-change-graph (length xs)))]))
+  (hash-set M f new-record))
 
 (: err : Size-Change-Graph Procedure (Listof Any) (Listof Any) → Nothing)
 (define (err G f xs₀ xs)
@@ -127,8 +122,7 @@
 (define (mk-graph xs₀ xs₁)
   (for*/hash : Size-Change-Graph ([(v₀ i₀) (in-indexed xs₀)]
                                   [(v₁ i₁) (in-indexed xs₁)]
-                                  [?↓ (in-value (cmp v₀ v₁))]
-                                  #:when ?↓)
+                                  [?↓ (in-value (cmp v₀ v₁))] #:when ?↓)
     (values (cons i₀ i₁) ?↓)))
 
 (: cmp : Any Any → ?Dec)
