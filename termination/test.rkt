@@ -154,17 +154,15 @@
   (define -one `(,-S ,-Z))
   (define -two `((,-plus ,-one) ,-one))
 
-  (define size ; e e → ℕ
+  (define size ; (U e ρ) → ℕ
     (match-lambda
       [`(λ ,_ ,e) (+ 1 (size e))]
       [(? symbol? x) 1]
-      [`(,e₁ ,e₂) (+ (size e₁) (size e₂))]))
+      [`(,e₁ ,e₂) (+ (size e₁) (size e₂))]
+      [(? hash? h) (hash-count h)]))
 
-  (define ≺ ; (U e ρ) (U e ρ) → Boolean
-    (match-lambda**
-     [((? hash? ρ₁) (? hash? ρ₂)) (< (hash-count ρ₁) (hash-count ρ₂))]
-     [((and x (not (? hash?))) (and y (not (? hash?)))) (< (size x) (size y))]
-     [(_ _) #f]))
+  ;; ≺ : (U e ρ) (U e ρ) → Boolean
+  (define (≺ x y) (< (size x) (size y)))
 
   (parameterize ([<? ≺])
     (begin/termination (ev '((λ (x) (x x)) (λ (y) y))))
