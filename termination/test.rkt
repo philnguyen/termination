@@ -154,7 +154,7 @@
   (define -one `(,-S ,-Z))
   (define -two `((,-plus ,-one) ,-one)) 
 
-  ;; ≺ : (U e v ρ) (U e v ρ) → Boolean
+  ;; ≺ : (U e ρ) (U e ρ) → Boolean
   (define (≺ x y)
     ;; Check if `e₁`'s node count is strictly smaller than `e₂`'s
     (define (e≺ e₁ e₂)
