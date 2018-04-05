@@ -23,8 +23,8 @@
 (define-type Dec (U '↓ '↧))
 (define-type ?Dec (Option Dec)) ; ↓ ⊑ ↧ ⊑ #f
 
-(struct Call-Record ([#|most recent call       |# last-args : (Listof Any)]
-                     [#|accumulated size change|# change-graph : Size-Change-Graph])
+(struct Call-Record ([most-recent-args : (Listof Any)]
+                     [accumulated-change-graph : Size-Change-Graph])
   #:transparent)
 
 (define-type Record-Table (Immutable-HashTable Procedure Call-Record))
