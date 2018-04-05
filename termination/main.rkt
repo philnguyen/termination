@@ -32,6 +32,7 @@
     ;; How to determine "primitive-ness" at compile time?
     (pattern p:id #:when (with-handlers ([exn? (λ _ #f)])
                            (primitive? (eval #'p))))
+    ;; Below are temp. hacks just because above fails
     (pattern (~literal add1))
     (pattern (~literal sub1))
     (pattern (~literal null?))

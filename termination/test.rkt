@@ -132,3 +132,41 @@
         (length/cps (cdr xs) (λ (n) (add1 (k n))))))
   (define (length xs) (length/cps xs values))
   (begin/termination (length '(a b c d e))))
+
+(let ()
+  ;; e ::= (λ (x) e) | x | (e e)
+  ;; v ::= (λ (x) e) × ρ
+  ;; ρ = x → v
+  ;; ev : e ρ → v 
+  (define (ev e [ρ (hasheq)])
+    (match e
+      [`(λ (,x) ,_)  (cons e ρ)]
+      [(? symbol? x) (hash-ref ρ x (λ () (error 'ev "no ~a" x)))]
+      [`(,e₁ ,e₂)
+       (match* ((ev e₁ ρ) (ev e₂ ρ))
+         [((cons `(λ (,x) ,e*) ρ*) v) (ev e* (hash-set ρ* x v))]
+         [(v₁ _) (error 'ev "~a evals to ~a, not function" e₁ v₁)])]))
+
+  (define (-let x eₓ e) `((λ (,x) ,e) ,eₓ))
+  (define -Z `(λ (f) (λ (x) x)))
+  (define -S `(λ (n) (λ (f) (λ (x) (f ((n f) x))))))
+  (define -plus `(λ (m) (λ (n) (λ (f) (λ (x) ((m f) ((n f) x)))))))
+  (define -one `(,-S ,-Z))
+  (define -two `((,-plus ,-one) ,-one))
+
+  (define size ; e e → ℕ
+    (match-lambda
+      [`(λ ,_ ,e) (+ 1 (size e))]
+      [(? symbol? x) 1]
+      [`(,e₁ ,e₂) (+ (size e₁) (size e₂))]))
+
+  (define ≺ ; (U e ρ) (U e ρ) → Boolean
+    (match-lambda**
+     [((? hash? ρ₁) (? hash? ρ₂)) (< (hash-count ρ₁) (hash-count ρ₂))]
+     [((and x (not (? hash?))) (and y (not (? hash?)))) (< (size x) (size y))]
+     [(_ _) #f]))
+
+  (parameterize ([<? ≺])
+    (begin/termination (ev '((λ (x) (x x)) (λ (y) y))))
+    (begin/termination (ev -two)))
+  (check-exn exn? (λ () (begin/termination (ev '((λ (x) (x x)) (λ (y) (y y))))))))
