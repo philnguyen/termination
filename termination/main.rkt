@@ -4,7 +4,7 @@
          terminating-function/c
          define/termination
          begin/termination
-         custom-<?
+         <?
          )
 
 (require (for-syntax racket/base
@@ -43,6 +43,11 @@
     (pattern (~literal *))
     (pattern (~literal zero?))))
 
+(define (should-monitor? f) ; `f` if should, or `#f`
+  (cond [(terminating-function? f) (terminating-function-unwrapped f)]
+        [(enforcing-termination?) f]
+        [else #f]))
+
 (define-syntax -app
   (syntax-parser
     [(_ fun:fin arg ...)
@@ -51,12 +56,8 @@
      (with-syntax ([(x ...) (generate-temporaries #'(arg ...))])
        #'(let ([f fun]
                [x arg] ...)
-           (cond
-             [(terminating-function? f)
-              (let ([f* (terminating-function-unwrapped f)])
-                (with-call-monitored f* (list x ...)
-                  (λ () (#%app f* x ...))))]
-             [(enforcing-termination?)
-              (with-call-monitored f (list x ...)
-                (λ () (#%app f x ...)))]
-             [else (#%app f x ...)])))]))
+           (define f* (should-monitor? f))
+           (if f*
+               (with-call-monitored f* (list x ...)
+                 (λ () (#%app f* x ...)))
+               (#%app f x ...))))]))

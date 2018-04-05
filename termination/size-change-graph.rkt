@@ -8,9 +8,9 @@
          syntax/parse/define)
 
 ;; `unsafe-provide` to get around contracts messing with functions as hash-table keys
-(unsafe-provide enforcing-termination?
-                custom-<?
-                with-call-monitored)
+(unsafe-provide enforcing-termination? 
+                with-call-monitored
+                <?)
 (unsafe-require/typed rnrs/arithmetic/bitwise-6
   [bitwise-bit-count (Positive-Integer → Index)])
 
@@ -21,7 +21,6 @@
 ;; where each edge denotes a "must" non-ascendence between argument indices
 (define-type Size-Change-Graph (Immutable-HashTable (Pairof Integer Integer) Dec))
 (define-type Dec (U '↓ '↧))
-(define-type ?Dec (Option Dec)) ; ↓ ⊑ ↧ ⊑ #f
 
 (struct Call-Record ([most-recent-args : (Listof Any)]
                      [accumulated-change-graph : Size-Change-Graph])
@@ -33,7 +32,6 @@
 (define-parameter record-table : Record-Table (hasheq))
 (define-parameter call-stack : Call-Stack (hasheq))
 (define-parameter counts : (Immutable-HashTable Procedure Positive-Integer) (hasheq))
-(define-parameter custom-<? : (Any Any → Boolean) (λ _ #f))
 
 ;; The empty call-stack is absused as a "not checking" flag.
 ;; When termination checking starts, it always pushes to the call-stack.
@@ -118,18 +116,24 @@
                                   [?↓ (in-value (cmp v₀ v₁))] #:when ?↓)
     (values (cons i₀ i₁) ?↓)))
 
-(: cmp : Any Any → ?Dec)
+(: <?:default : Any Any → Boolean)
+;; Simple default implementation of well-founded strict partial order on data
+(define (<?:default x y)
+  (cond [(integer? y) (and (integer? x) (< -1 x y))]
+        [(pair? y) (or (equal? x (car y))
+                       (equal? x (cdr y))
+                       (<?:default x (car y))
+                       (<?:default x (cdr y)))]
+        [else #f]))
+
+(define-parameter <? : (Any Any → Boolean) <?:default)
+
+(: cmp : Any Any → (Option Dec))
 ;; Judge the transition between former and latter value based on some well-founded partial order
 ;; - `↓` is definite descendence
 ;; - '↧` is definite non-ascendence
 ;; - `#f` is conservative "don't know"
-(define (cmp x y)
-  (define ≺ (custom-<?))
-  (let go ([x x] [y y])
-    (cond [(equal? x y) '↧]
-          [(and (integer? x) (integer? y) (> x y -1)) '↓]
-          [(and (pair? x) (or (go (car x) y) (go (cdr x) y))) '↓]
-          [else (and (≺ x y) '↓)])))
+(define (cmp x y) (if (equal? x y) '↧ (and ((<?) y x) '↓)))
 
 (define Dec-best : (Dec * → Dec)
   (match-lambda*
