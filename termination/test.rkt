@@ -152,19 +152,26 @@
   (define -S `(λ (n) (λ (f) (λ (x) (f ((n f) x))))))
   (define -plus `(λ (m) (λ (n) (λ (f) (λ (x) ((m f) ((n f) x)))))))
   (define -one `(,-S ,-Z))
-  (define -two `((,-plus ,-one) ,-one))
+  (define -two `((,-plus ,-one) ,-one)) 
 
-  (define size ; (U e ρ) → ℕ
-    (match-lambda
-      [`(λ ,_ ,e) (+ 1 (size e))]
-      [(? symbol? x) 1]
-      [`(,e₁ ,e₂) (+ (size e₁) (size e₂))]))
-
-  (define ≺ ; (U e ρ) (U e ρ) → Boolean
-    (match-lambda**
-     [((? hash? ρ₁) (? hash? ρ₂)) (< (hash-count ρ₁) (hash-count ρ₂))]
-     [((and x (not (? hash?))) (and y (not (? hash?)))) (< (size x) (size y))]
-     [(_ _) #f]))
+  ;; ≺ : (U e v ρ) (U e v ρ) → Boolean
+  (define (≺ x y)
+    ;; Check if `e₁`'s node count is strictly smaller than `e₂`'s
+    (define (e≺ e₁ e₂)
+      (define size
+        (match-lambda
+          [`(λ ,_ ,e) (+ 1 (size e))]
+          [(? symbol? x) 1]
+          [`(,e₁ ,e₂) (+ (size e₁) (size e₂))]))
+      (< (size x) (size y)))
+    ;; Check if `ρ₁` is strictly a sub-structure of `ρ₂`
+    (define (ρ≺ ρ₁ ρ₂)
+      (for/or ([v (in-hash-values ρ₂)])
+        (define ρ* (cdr v))
+        (or (equal? ρ₁ ρ*) (ρ≺ ρ₁ ρ*))))
+    
+    (or (and (hash? x) (hash? y)             (ρ≺ x y))            
+        (and (not (hash? x)) (not (hash? y)) (e≺ x y))))
 
   (parameterize ([<? ≺])
     (begin/termination (ev '((λ (x) (x x)) (λ (y) y))))
