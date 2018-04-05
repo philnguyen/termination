@@ -161,10 +161,7 @@
       [`(,e₁ ,e₂) (+ (size e₁) (size e₂))]
       [(? hash? h) (hash-count h)]))
 
-  ;; ≺ : (U e ρ) (U e ρ) → Boolean
-  (define (≺ x y) (< (size x) (size y)))
-
-  (parameterize ([<? ≺])
+  (parameterize ([<? (λ (x y) (< (size x) (size y)))])
     (begin/termination (ev '((λ (x) (x x)) (λ (y) y))))
     (begin/termination (ev -two)))
   (check-exn exn? (λ () (begin/termination (ev '((λ (x) (x x)) (λ (y) (y y))))))))
