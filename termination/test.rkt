@@ -158,10 +158,17 @@
     (match-lambda
       [`(λ ,_ ,e) (+ 1 (size e))]
       [(? symbol? x) 1]
-      [`(,e₁ ,e₂) (+ (size e₁) (size e₂))]
-      [(? hash? h) (hash-count h)]))
+      [`(,e₁ ,e₂) (+ (size e₁) (size e₂))]))
 
-  (parameterize ([<? (λ (x y) (< (size x) (size y)))])
+  (define ≺ ; (U e ρ) (U e ρ) → Boolean
+    (match-lambda**
+     [((? hash? ρ₁) (? hash? ρ₂)) (< (hash-count ρ₁) (hash-count ρ₂))]
+     [((and x (not (? hash?))) (and y (not (? hash?)))) (< (size x) (size y))]
+     [(_ _) #f]))
+
+  (parameterize ([<? ≺])
     (begin/termination (ev '((λ (x) (x x)) (λ (y) y))))
-    (begin/termination (ev -two)))
+    (begin/termination (ev -two))
+    (check-exn exn? (λ () (begin/termination (ev '((λ (x) (x x)) (λ (y) (y y))))))))
+  
   (check-exn exn? (λ () (begin/termination (ev '((λ (x) (x x)) (λ (y) (y y))))))))
