@@ -84,12 +84,11 @@
           (format "  * arg ~a: ~a" i x))
       ,"Accumulated size-change graph:"
       ,@(for/list : (Listof String) ([(edge ↝) (in-hash G)])
-          (match-define (cons src tgt) edge)
-          (format "  - ~a ~a ~a" src ↝ tgt))))
+          (format "  - ~a ~a ~a" (car edge) ↝ (cdr edge)))))
   (error 'possible-non-termination (string-join lines "\n")))
 
 (: strictly-descending? : Size-Change-Graph → Boolean)
-(define (strictly-descending? G) (for/or : Boolean ([d (in-hash-values G)]) (eq? d '↓)))
+(define (strictly-descending? G) (for/or ([d (in-hash-values G)]) (eq? d '↓)))
 
 (: init-size-change-graph : Index → Size-Change-Graph)
 ;; Initial size-change graph, where each argument have strictly descended from "infinity"
@@ -104,13 +103,12 @@
 (define (compose-graph G₁ G₂)
   (for*/fold ([G* : Size-Change-Graph (hash)])
              ([(edge₁ ↝₁) (in-hash G₁)]
+              [i (in-value (cdr edge₁))]
               [(edge₂ ↝₂) (in-hash G₂)]
-              [s₁ (in-value (car edge₁))]
-              [t₁ (in-value (cdr edge₁))]
-              [s₂ (in-value (car edge₂))]
-              [t₂ (in-value (cdr edge₂))]
-              #:when (equal? t₁ s₂))
-    (hash-update G* (cons s₁ t₂) (λ ([↝₀ : Dec]) (Dec-best ↝₀ ↝₁ ↝₂)) (λ () '↧))))
+              #:when (eq? i (car edge₂)))
+    (hash-update G* (cons (car edge₁) (cdr edge₂))
+                 (λ ([↝₀ : Dec]) (Dec-best ↝₀ ↝₁ ↝₂))
+                 (λ () '↧))))
 
 (: mk-graph : (Listof Any) (Listof Any) → Size-Change-Graph)
 ;; Make size-change graph from comparing old and new argument lists

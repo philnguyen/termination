@@ -64,6 +64,34 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; HO Size-change paper examples
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(let ()
+  (define ((g r) a) (r (r a)))
+  (define (f n) (if (zero? n) (λ (x) (+ 1 x)) (g (f (- n 1)))))
+  (begin/termination (f 5)))
+
+(let ()
+  (define (foldr op a xs) (if (null? xs) a (op (car xs) (foldr op a (cdr xs)))))
+  (define (foldl op a xs) (if (null? xs) a (foldl op (op (car xs) a) (cdr xs))))
+  (define (reverse xs) (foldl (λ (ys x) (cons x ys)) '() xs))
+  (define (@ xs ys) (foldr cons xs ys))
+  (define (concat xss) (foldr @ '() xss))
+  (begin/termination (reverse '(1 2 3)))
+  (begin/termination (@ '(1 2 3) '(4 5 6)))
+  (begin/termination (concat '((1 2 3) (4 5 6) (7 8 9)))))
+
+(let ()
+  (define (Y f) ((λ (q) (f (λ (s) ((q q) s))))
+                 (λ (q) (f (λ (s) ((q q) s))))))
+  (define (((h b) f) n) (if (zero? n) (f 1) (f ((b f) (sub1 n)))))
+  (define ((g a) m) (if (zero? m) add1 ((Y h) (a (sub1 m)))))
+  (define (ack m n) (((Y g) m) n))
+  (begin/termination (ack 3 1)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Other examples
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
