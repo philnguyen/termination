@@ -125,3 +125,11 @@
         ['() '()])))
   (begin/termination (quicksort '(1 1 1 1 1)))
   (check-exn exn? (λ () (begin/termination (quicksort:incorrect '(1 1 1 1 1))))))
+
+(let () ; Static analysis has to conflate many `(λ (n) …)` closures
+  (define (length/cps xs k)
+    (if (null? xs)
+        (k 0)
+        (length/cps (cdr xs) (λ (n) (add1 (k n))))))
+  (define (length xs) (length/cps xs values))
+  (begin/termination (length '(a b c d e))))
