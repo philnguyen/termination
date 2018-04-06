@@ -40,7 +40,7 @@
 (define-syntax -app
   (syntax-parser
     [(_ fun:fin arg ...)
-     #'(#%app fun arg ...)]
+     #'(fun arg ...)]
     [(_ fun arg ...)
      (with-syntax ([(x ...) (generate-temporaries #'(arg ...))])
        #'(let ([f fun]
@@ -48,5 +48,5 @@
            (define f* (should-monitor? f))
            (if f*
                (with-call-monitored f* (list x ...)
-                 (λ () (#%app f* x ...)))
-               (#%app f x ...))))]))
+                 (λ () (f* x ...)))
+               (f x ...))))]))
