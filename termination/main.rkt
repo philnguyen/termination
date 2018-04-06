@@ -28,21 +28,9 @@
   (require racket/base)
   (define-syntax-class fin
     #:description "recognized terminating functions"
-    ;; TODO not working
-    ;; How to determine "primitive-ness" at compile time?
+    ;; TODO fix ugly hack
     (pattern p:id #:when (with-handlers ([exn? (λ _ #f)])
-                           (primitive? (eval #'p))))
-    ;; Below are temp. hacks just because above fails
-    (pattern (~literal add1))
-    (pattern (~literal sub1))
-    (pattern (~literal null?))
-    (pattern (~literal cons))
-    (pattern (~literal car))
-    (pattern (~literal cdr))
-    (pattern (~literal +))
-    (pattern (~literal -))
-    (pattern (~literal *))
-    (pattern (~literal zero?))))
+                           (primitive? (eval (format-id #'dummy "~a" #'p)))))))
 
 (define (should-monitor? f) ; `f` if should, or `#f`
   (cond [(terminating-function? f) (terminating-function-unwrapped f)]
