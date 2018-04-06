@@ -63,7 +63,7 @@
       [(Call-Record xs₀ G₀)
        (define G (mk-graph xs₀ xs))
        (cond [(strictly-descending? G)
-              (define G* (compose-graph G₀ G))
+              (define G* (concat-graph G₀ G))
               (cond [(strictly-descending? G*) (Call-Record xs G*)]
                     [else (err G* f xs₀ xs)])]
              [else (err G f xs₀ xs)])]
@@ -97,8 +97,8 @@
                  (λ () (for/hash : Size-Change-Graph ([i (in-range n)])
                          (values (cons i i) '↓)))))))
 
-(: compose-graph : Size-Change-Graph Size-Change-Graph → Size-Change-Graph)
-(define (compose-graph G₁ G₂)
+(: concat-graph : Size-Change-Graph Size-Change-Graph → Size-Change-Graph)
+(define (concat-graph G₁ G₂)
   (for*/fold ([G* : Size-Change-Graph (hash)])
              ([(edge₁ ↝₁) (in-hash G₁)]
               [i (in-value (cdr edge₁))]
