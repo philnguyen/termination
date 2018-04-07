@@ -4,6 +4,7 @@
          racket/set
          racket/list
          racket/string
+         racket/unsafe/ops
          typed/racket/unsafe
          syntax/parse/define)
 
@@ -11,8 +12,6 @@
 (unsafe-provide enforcing-termination? 
                 with-call-monitored
                 <?)
-(unsafe-require/typed rnrs/arithmetic/bitwise-6
-  [bitwise-bit-count (Positive-Integer → Index)])
 
 (define-simple-macro (define-parameter x:id (~literal :) T e)
   (define x ((inst make-parameter T) e)))
@@ -47,7 +46,7 @@
      (define n (add1 (hash-ref cnts f (λ () 0))))
      (parameterize ([call-stack (hash-set cs₀ f cs₀)]
                     [counts (hash-set cnts f n)])
-       (if (= 1 (bitwise-bit-count n)) ; check at every power of 2
+       (if (zero? (unsafe-fxand n (sub1 n))) ; check at every power of 2
            (parameterize ([record-table (update-Record-Table (record-table) f xs)])
              (exec))
            (exec)))]
