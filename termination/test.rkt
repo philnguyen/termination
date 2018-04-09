@@ -173,9 +173,10 @@
     (or (and (hash? x) (hash? y)             (ρ≺ x y))            
         (and (not (hash? x)) (not (hash? y)) (e≺ x y))))
 
-  (parameterize ([<? ≺])
-    (begin/termination (ev '((λ (x) (x x)) (λ (y) y))))
-    (begin/termination (ev -two))
-    (check-exn exn? (λ () (begin/termination (ev '((λ (x) (x x)) (λ (y) (y y))))))))
+  (with-<? ≺
+    (begin
+      (begin/termination (ev '((λ (x) (x x)) (λ (y) y))))
+      (begin/termination (ev -two))
+      (check-exn exn? (λ () (begin/termination (ev '((λ (x) (x x)) (λ (y) (y y)))))))))
   
   (check-exn exn? (λ () (begin/termination (ev '((λ (x) (x x)) (λ (y) (y y))))))))

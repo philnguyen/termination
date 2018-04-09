@@ -6,15 +6,13 @@
          racket/string
          racket/unsafe/ops
          typed/racket/unsafe
-         syntax/parse/define)
+         syntax/parse/define
+         "flattened-parameter.rkt")
 
 ;; `unsafe-provide` to get around contracts messing with functions as hash-table keys
 (unsafe-provide enforcing-termination? 
-                with-call-monitored
-                <?)
-
-(define-simple-macro (define-parameter x:id (~literal :) T e)
-  (define x ((inst make-parameter T) e)))
+                apply/termination
+                with-<?)
 
 ;; A size-change graph tracks how a function calls itself,
 ;; where each edge denotes a "must" non-ascendence between argument indices
@@ -29,30 +27,30 @@
 (define-type Call-Stack (Immutable-HashTable Procedure Call-Stack))
 
 (define-parameter record-table : Record-Table (hasheq))
+(define-parameter loop-count : (Immutable-HashTable Procedure Positive-Integer) (hasheq))
 (define-parameter call-stack : Call-Stack (hasheq))
-(define-parameter counts : (Immutable-HashTable Procedure Positive-Integer) (hasheq))
 
 ;; The empty call-stack is absused as a "not checking" flag.
 ;; When termination checking starts, it always pushes to the call-stack.
 (define (enforcing-termination?) (not (hash-empty? (call-stack))))
 
-(: with-call-monitored (∀ (X) Procedure (Listof Any) (→ X) → X))
+(: apply/termination (∀ (X Y) (X * → Y) X * → Y))
 ;; Mark size-change progress before executing the body
-(define (with-call-monitored f xs exec)
+(define (apply/termination f . xs)
   (define cs (call-stack))
   (match (hash-ref cs f #f)
-    [(? values cs₀) ; `f` is a loop entry
-     (define cnts (counts))
-     (define n (add1 (hash-ref cnts f (λ () 0))))
-     (parameterize ([call-stack (hash-set cs₀ f cs₀)]
-                    [counts (hash-set cnts f n)])
-       (if (zero? (unsafe-fxand n (sub1 n))) ; check at every power of 2
-           (parameterize ([record-table (update-Record-Table (record-table) f xs)])
-             (exec))
-           (exec)))]
+    [(? values cs₀)
+     (with-call-stack (hash-set cs₀ f cs₀)
+       (define cnt (loop-count))
+       (define n₀ (hash-ref cnt f (λ () 0)))
+       (define n (add1 n₀))
+       (with-loop-count (hash-set cnt f n)
+         (if (zero? (unsafe-fxand n n₀))
+             (with-record-table (update-Record-Table (record-table) f xs)
+               (apply f xs))
+             (apply f xs))))]
     [_
-     (parameterize ([call-stack (hash-set cs f cs)])
-       (exec))]))
+     (with-call-stack (hash-set cs f cs) (apply f xs))]))
 
 (: update-Record-Table : Record-Table Procedure (Listof Any) → Record-Table)
 ;; Update function `f`'s call record, accumulating observed ways in which it transitions to itself

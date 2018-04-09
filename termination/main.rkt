@@ -4,12 +4,13 @@
          terminating-function/c
          define/termination
          begin/termination
-         <?
+         with-<?
          )
 
 (require (for-syntax racket/base
                      racket/syntax
                      syntax/parse)
+         racket/unsafe/ops
          "size-change-graph.rkt")
 
 (struct terminating-function (unwrapped) #:transparent
@@ -32,11 +33,6 @@
     (pattern p:id #:when (with-handlers ([exn? (λ _ #f)])
                            (primitive? (eval (format-id #'dummy "~a" #'p)))))))
 
-(define (should-monitor? f) ; `f` if should, or `#f`
-  (cond [(terminating-function? f) (terminating-function-unwrapped f)]
-        [(enforcing-termination?) f]
-        [else #f]))
-
 (define-syntax -app
   (syntax-parser
     [(_ fun:fin arg ...)
@@ -45,8 +41,8 @@
      (with-syntax ([(x ...) (generate-temporaries #'(arg ...))])
        #'(let ([f fun]
                [x arg] ...)
-           (define f* (should-monitor? f))
-           (if f*
-               (with-call-monitored f* (list x ...)
-                 (λ () (f* x ...)))
-               (f x ...))))]))
+           (cond [(terminating-function? f)
+                  (apply/termination (unsafe-struct-ref f 0) x ...)]
+                 [(enforcing-termination?)
+                  (apply/termination f x ...)]
+                 [else (f x ...)])))]))
