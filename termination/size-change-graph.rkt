@@ -12,7 +12,7 @@
 ;; `unsafe-provide` to get around contracts messing with functions as hash-table keys
 (unsafe-provide enforcing-termination? 
                 apply/termination
-                with-<?)
+                (rename-out [with-<? with-custom-<]))
 
 ;; A size-change graph tracks how a function calls itself,
 ;; where each edge denotes a "must" non-ascendence between argument indices
