@@ -27,7 +27,7 @@
 
 ;; With termination check
 (begin
-  (gc) (time (void ((terminating-function/c a) 3 10)))
+  (gc) (time (void ((terminating-function/c a) 3 5)))
   (gc) (time (void ((terminating-function/c fact) 10000)))
   (gc) (time (void ((terminating-function/c rev) l)))
   )
