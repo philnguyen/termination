@@ -10,7 +10,7 @@
          "flattened-parameter.rkt")
 
 ;; `unsafe-provide` to get around contracts messing with functions as hash-table keys
-(unsafe-provide enforcing-termination? 
+(unsafe-provide divergence-allowed?
                 apply/termination
                 (rename-out [with-<? with-custom-<]))
 
@@ -24,33 +24,29 @@
   #:transparent)
 
 (define-type Record-Table (Immutable-HashTable Procedure Call-Record))
-(define-type Call-Stack (Immutable-HashTable Procedure Call-Stack))
+(define-type Call-Stack (Immutable-HashTable Procedure (Pairof Call-Stack Natural)))
 
 (define-parameter record-table : Record-Table (hasheq))
-(define-parameter loop-count : (Immutable-HashTable Procedure Positive-Integer) (hasheq))
 (define-parameter call-stack : Call-Stack (hasheq))
 
 ;; The empty call-stack is absused as a "not checking" flag.
 ;; When termination checking starts, it always pushes to the call-stack.
-(define (enforcing-termination?) (not (hash-empty? (call-stack))))
+(define (divergence-allowed?) (hash-empty? (call-stack)))
 
 (: apply/termination (∀ (X Y) (X * → Y) X * → Y))
 ;; Mark size-change progress before executing the body
 (define (apply/termination f . xs)
   (define cs (call-stack))
   (match (hash-ref cs f #f)
-    [(? values cs₀)
-     (with-call-stack (hash-set cs₀ f cs₀)
-       (define cnt (loop-count))
-       (define n₀ (hash-ref cnt f (λ () 0)))
-       (define n (add1 n₀))
-       (with-loop-count (hash-set cnt f n)
-         (if (zero? (unsafe-fxand n n₀))
-             (with-record-table (update-Record-Table (record-table) f xs)
-               (apply f xs))
-             (apply f xs))))]
+    [(cons cs₀ n₀)
+     (define n (add1 n₀))
+     (with-call-stack (hash-set cs₀ f (cons cs₀ n))
+       (if (zero? (unsafe-fxand n n₀))
+           (with-record-table (update-Record-Table (record-table) f xs)
+             (apply f xs))
+           (apply f xs)))]
     [_
-     (with-call-stack (hash-set cs f cs) (apply f xs))]))
+     (with-call-stack (hash-set cs f (cons cs 0)) (apply f xs))]))
 
 (: update-Record-Table : Record-Table Procedure (Listof Any) → Record-Table)
 ;; Update function `f`'s call record, accumulating observed ways in which it transitions to itself

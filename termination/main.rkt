@@ -43,6 +43,6 @@
                [x arg] ...)
            (cond [(terminating-function? f)
                   (apply/termination (unsafe-struct-ref f 0) x ...)]
-                 [(enforcing-termination?)
-                  (apply/termination f x ...)]
-                 [else (f x ...)])))]))
+                 [(divergence-allowed?)
+                  (f x ...)]
+                 [else (apply/termination f x ...)])))]))
