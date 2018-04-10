@@ -27,11 +27,12 @@
 (define-type Call-Stack (Immutable-HashTable Procedure (Pairof Call-Stack Natural)))
 
 (define-parameter record-table : Record-Table (hasheq))
-(define-parameter call-stack : Call-Stack (hasheq))
+(define mt-call-stack : Call-Stack (hasheq))
+(define-parameter call-stack : Call-Stack mt-call-stack)
 
 ;; The empty call-stack is absused as a "not checking" flag.
 ;; When termination checking starts, it always pushes to the call-stack.
-(define (divergence-allowed?) (hash-empty? (call-stack)))
+(define (divergence-allowed?) (eq? mt-call-stack (call-stack)))
 
 (: apply/termination (∀ (X Y) (X * → Y) X * → Y))
 ;; Mark size-change progress before executing the body
