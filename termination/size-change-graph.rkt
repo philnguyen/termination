@@ -17,6 +17,11 @@
 ;; A size-change graph tracks how a function calls itself,
 ;; where each edge denotes a "must" non-ascendence between argument indices
 (define-type Size-Change-Graph (Immutable-HashTable (Pairof Integer Integer) Dec))
+
+;; Transition between values based on some well-founded partial order
+;; - `↓` is definite descendence
+;; - '↧` is definite non-ascendence
+;; - `#f` is conservative "don't know"
 (define-type Dec (U '↓ '↧))
 
 (struct Call-Record ([most-recent-args : (Listof Any)]
@@ -105,6 +110,7 @@
 (: mk-graph : (Listof Any) (Listof Any) → Size-Change-Graph)
 ;; Make size-change graph from comparing old and new argument lists
 (define (mk-graph xs₀ xs₁)
+  (define cmp (let ([≺ (<?)]) (λ (x y) (if (equal? x y) '↧ (and (≺ y x) '↓)))))
   (for*/hash : Size-Change-Graph ([(v₀ i₀) (in-indexed xs₀)]
                                   [(v₁ i₁) (in-indexed xs₁)]
                                   [?↓ (in-value (cmp v₀ v₁))] #:when ?↓)
@@ -121,13 +127,6 @@
         [else #f]))
 
 (define-parameter <? : (Any Any → Boolean) <?:default)
-
-(: cmp : Any Any → (Option Dec))
-;; Judge the transition between former and latter value based on some well-founded partial order
-;; - `↓` is definite descendence
-;; - '↧` is definite non-ascendence
-;; - `#f` is conservative "don't know"
-(define (cmp x y) (if (equal? x y) '↧ (and ((<?) y x) '↓)))
 
 (define Dec-best : (Dec * → Dec)
   (match-lambda*
