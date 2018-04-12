@@ -16,7 +16,7 @@
 
 ;; A size-change graph tracks how a function calls itself,
 ;; where each edge denotes a "must" non-ascendence between argument indices
-(define-type Size-Change-Graph (Immutable-HashTable (Pairof Integer Integer) Dec))
+(define-type SC-Graph (Immutable-HashTable (Pairof Integer Integer) Dec))
 
 ;; Transition between values based on some well-founded partial order
 ;; - `↓` is definite descendence
@@ -25,7 +25,7 @@
 (define-type Dec (U '↓ '↧))
 
 (struct Call-Record ([most-recent-args : (Listof Any)]
-                     [accumulated-change-graph : Size-Change-Graph])
+                     [accumulated-sc-graph : SC-Graph])
   #:transparent)
 
 (define-type Record-Table (Immutable-HashTable Procedure Call-Record))
@@ -66,12 +66,12 @@
               (cond [(strictly-descending? G*) (Call-Record xs G*)]
                     [else (err G₀ G f xs₀ xs)])]
              [else (err G₀ G f xs₀ xs)])]
-      [#f (Call-Record xs (init-size-change-graph (length xs)))]))
+      [#f (Call-Record xs (init-sc-graph (length xs)))]))
   (hash-set M f new-record))
 
-(: err : Size-Change-Graph Size-Change-Graph Procedure (Listof Any) (Listof Any) → Nothing)
+(: err : SC-Graph SC-Graph Procedure (Listof Any) (Listof Any) → Nothing)
 (define (err G₀ G f xs₀ xs)
-  (define (graph->lines [G : Size-Change-Graph])
+  (define (graph->lines [G : SC-Graph])
     (for/list : (Listof String) ([(edge ↝) (in-hash G)])
       (format "  * ~a ~a ~a" (car edge) ↝ (cdr edge))))
   (define (args->lines [xs : (Listof Any)])
@@ -85,21 +85,21 @@
       "Step graph:"    ,@(graph->lines G)))
   (error 'possible-non-termination (string-join lines "\n")))
 
-(: strictly-descending? : Size-Change-Graph → Boolean)
+(: strictly-descending? : SC-Graph → Boolean)
 (define (strictly-descending? G) (for/or ([d (in-hash-values G)]) (eq? d '↓)))
 
-(: init-size-change-graph : Index → Size-Change-Graph)
+(: init-sc-graph : Index → SC-Graph)
 ;; Initial size-change graph, where each argument have strictly descended from "infinity"
-(define init-size-change-graph
-  (let ([cache : (Mutable-HashTable Index Size-Change-Graph) (make-hasheq)])
+(define init-sc-graph
+  (let ([cache : (Mutable-HashTable Index SC-Graph) (make-hasheq)])
     (λ (n)
       (hash-ref! cache n
-                 (λ () (for/hash : Size-Change-Graph ([i (in-range n)])
+                 (λ () (for/hash : SC-Graph ([i (in-range n)])
                          (values (cons i i) '↓)))))))
 
-(: concat-graph : Size-Change-Graph Size-Change-Graph → Size-Change-Graph)
+(: concat-graph : SC-Graph SC-Graph → SC-Graph)
 (define (concat-graph G₁ G₂)
-  (for*/fold ([G* : Size-Change-Graph (hash)])
+  (for*/fold ([G* : SC-Graph (hash)])
              ([(edge₁ ↝₁) (in-hash G₁)]
               [i (in-value (cdr edge₁))]
               [(edge₂ ↝₂) (in-hash G₂)]
@@ -108,11 +108,11 @@
                  (λ ([↝₀ : Dec]) (Dec-best ↝₀ ↝₁ ↝₂))
                  (λ () '↧))))
 
-(: mk-graph : (Listof Any) (Listof Any) → Size-Change-Graph)
+(: mk-graph : (Listof Any) (Listof Any) → SC-Graph)
 ;; Make size-change graph from comparing old and new argument lists
 (define (mk-graph xs₀ xs₁)
   (define cmp (let ([≺ (<?)]) (λ (x y) (if (equal? x y) '↧ (and (≺ y x) '↓)))))
-  (for*/hash : Size-Change-Graph ([(v₀ i₀) (in-indexed xs₀)]
+  (for*/hash : SC-Graph ([(v₀ i₀) (in-indexed xs₀)]
                                   [(v₁ i₁) (in-indexed xs₁)]
                                   [?↓ (in-value (cmp v₀ v₁))] #:when ?↓)
     (values (cons i₀ i₁) ?↓)))
