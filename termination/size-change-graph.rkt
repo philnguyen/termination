@@ -64,24 +64,25 @@
        (cond [(strictly-descending? G)
               (define G* (concat-graph G₀ G))
               (cond [(strictly-descending? G*) (Call-Record xs G*)]
-                    [else (err G* f xs₀ xs)])]
-             [else (err G f xs₀ xs)])]
+                    [else (err G₀ G f xs₀ xs)])]
+             [else (err G₀ G f xs₀ xs)])]
       [#f (Call-Record xs (init-size-change-graph (length xs)))]))
   (hash-set M f new-record))
 
-(: err : Size-Change-Graph Procedure (Listof Any) (Listof Any) → Nothing)
-(define (err G f xs₀ xs)
+(: err : Size-Change-Graph Size-Change-Graph Procedure (Listof Any) (Listof Any) → Nothing)
+(define (err G₀ G f xs₀ xs)
+  (define (graph->lines [G : Size-Change-Graph])
+    (for/list : (Listof String) ([(edge ↝) (in-hash G)])
+      (format "  * ~a ~a ~a" (car edge) ↝ (cdr edge))))
+  (define (args->lines [xs : (Listof Any)])
+    (for/list : (Listof String) ([(x i) (in-indexed xs)])
+      (format "  * arg ~a: ~a" i x)))
   (define lines
     `(,(format "Recursive call to `~a` has no obvious descendence on any argument" f)
-      ,(format "- Preceding call:")
-      ,@(for/list : (Listof String) ([(x i) (in-indexed xs₀)])
-          (format "  * arg ~a: ~a" i x))
-      ,(format "- Subsequent call:")
-      ,@(for/list : (Listof String) ([(x i) (in-indexed xs)])
-          (format "  * arg ~a: ~a" i x))
-      ,"Accumulated size-change graph:"
-      ,@(for/list : (Listof String) ([(edge ↝) (in-hash G)])
-          (format "  - ~a ~a ~a" (car edge) ↝ (cdr edge)))))
+      "- Preceding call:"  ,@(args->lines xs₀)
+      "- Subsequent call:" ,@(args->lines xs)
+      "Initial graph:" ,@(graph->lines G₀)
+      "Step graph:"    ,@(graph->lines G)))
   (error 'possible-non-termination (string-join lines "\n")))
 
 (: strictly-descending? : Size-Change-Graph → Boolean)
