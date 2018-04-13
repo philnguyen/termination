@@ -24,14 +24,12 @@
 ;; - `#f` is conservative "don't know"
 (define-type Dec (U '↓ '↧))
 
-(struct Call-Record ([most-recent-args : (Listof Any)]
-                     [accumulated-sc-graph : SC-Graph])
+(struct Record ([last-examined-args : (Listof Any)]
+                [last-sc-graph : SC-Graph])
   #:transparent)
 
-(define-type Record-Table (Immutable-HashTable Procedure Call-Record))
-(define-type Call-Stack (Immutable-HashTable Procedure (Pairof Call-Stack Natural)))
+(define-type Call-Stack (Immutable-HashTable Procedure (Pairof Call-Stack (Option (Pairof Positive-Integer Record)))))
 
-(define-parameter record-table : Record-Table (hasheq))
 (define mt-call-stack : Call-Stack (hasheq))
 (define-parameter call-stack : Call-Stack mt-call-stack)
 
@@ -43,31 +41,29 @@
 ;; Mark size-change progress before executing the body
 (define (apply/termination f . xs)
   (define cs (call-stack))
-  (match (hash-ref cs f #f)
-    [(cons cs₀ n₀)
-     (define n (add1 n₀))
-     (with-call-stack (hash-set cs₀ f (cons cs₀ n))
-       (if (zero? (unsafe-fxand n n₀))
-           (with-record-table (update-Record-Table (record-table) f xs)
-             (apply f xs))
-           (apply f xs)))]
-    [_
-     (with-call-stack (hash-set cs f (cons cs 0)) (apply f xs))]))
+  (define rec*
+    (match (hash-ref cs f #f)
+      [(cons cs₀ ?rec₀)
+       (match ?rec₀
+         [(cons n₀ r₀)
+          (define n (add1 n₀))
+          (define r (if (zero? (unsafe-fxand n n₀)) (update-sc-graph r₀ f xs) r₀))
+          (cons n r)]
+         [_ (cons 1 (Record xs (init-sc-graph (length xs))))])]
+      [_ #f]))
+  (with-call-stack (hash-set cs f (cons cs rec*))
+    (apply f xs)))
 
-(: update-Record-Table : Record-Table Procedure (Listof Any) → Record-Table)
+(: update-sc-graph : Record Procedure (Listof Any) → Record)
 ;; Update function `f`'s call record, accumulating observed ways in which it transitions to itself
-(define (update-Record-Table M f xs)
-  (define new-record
-    (match (hash-ref M f #f)
-      [(Call-Record xs₀ G₀)
-       (define G (mk-graph xs₀ xs))
-       (cond [(strictly-descending? G)
-              (define G* (concat-graph G₀ G))
-              (cond [(strictly-descending? G*) (Call-Record xs G*)]
-                    [else (err G₀ G f xs₀ xs)])]
-             [else (err G₀ G f xs₀ xs)])]
-      [#f (Call-Record xs (init-sc-graph (length xs)))]))
-  (hash-set M f new-record))
+(define (update-sc-graph r₀ f xs)
+  (match-define (Record xs₀ G₀) r₀)
+  (define G (mk-graph xs₀ xs))
+  (cond [(strictly-descending? G)
+         (define G* (concat-graph G₀ G))
+         (cond [(strictly-descending? G*) (Record xs G*)]
+               [else (err G₀ G f xs₀ xs)])]
+        [else (err G₀ G f xs₀ xs)]))
 
 (: err : SC-Graph SC-Graph Procedure (Listof Any) (Listof Any) → Nothing)
 (define (err G₀ G f xs₀ xs)
