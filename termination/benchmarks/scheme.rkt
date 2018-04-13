@@ -1079,8 +1079,24 @@
        (loop obj))
 
      (sort-list '("one" "two" "three" "four" "five" "six"
-                  "seven" "eight" "nine" "ten" "eleven" "twelve")
+                        "seven" "eight" "nine" "ten" "eleven" "twelve")
                 string<?)))
 
-(require "../main.rkt")
-(time (begin/termination (scheme-eval expr1)))
+(module order racket/base
+  (provide ≺)
+  (require racket/match)
+  (define (≺ l r)
+    (cond [(and (list? l) (list? r)) (< (length l) (length r))]
+          [(and (vector? l) (vector? r) (= (vector-length l) (vector-length r)))
+           (for/or ([x (in-vector l)] [y (in-vector r)])
+             (≺ x y))]
+          [else (e≺ l r)]))
+  (define (e≺ e₁ e₂) (< (node-count e₁) (node-count e₂)))
+  (define node-count
+    (match-lambda
+      [(cons l r) (+ 1 (node-count l) (node-count r))]
+      [_ 1])))
+
+(require "../main.rkt" 'order)
+(time (with-custom-< ≺
+        (begin/termination (scheme-eval expr1))))
