@@ -1,0 +1,49 @@
+
+### Scheme benchmarks
+Convenient whole programs for measuring overhead over known terminating programs.
+- [ ] browse (set-cdr!)
+- [ ] collatz-q (open problem)
+- [ ] collatz (open problem)
+- [ ] conform (set-cdr!)
+- [ ] cpstak (can't for now, CPS conflats calls and returns in general)
+- [x] ctak
+- [x] dderiv
+- [x] deriv
+- [ ] destruct (set-cdr!)
+- [x] div
+- [ ] dynamic (set-cdr!)
+- [ ] dynamic2 (input)
+- [ ] early ((loop) decreases on mutable states)
+- [ ] fft ((loop) decreases on mutable states)
+- [ ] graphs (imperative loop 1 -> vector size)
+- [ ] kanren (`unify-internals`)
+- [ ] lattice (set-cdr!)
+- [ ] lattice2 (`map` with non-obvious descendence)
+- [ ] maze (set-cdr!)
+- [ ] maze2 (`lp` involve descending on mutable states)
+- [ ] mazefun (`for-aux` goes up from `lo`, fixable with custom ordering)
+- [ ] nboyer (`rewrite-args`, looks fixable with custom ordering)
+- [ ] nestedloop (`loop6` goes up from lower bound, fixable with custom ordering)
+- [x] nfa
+- [ ] nqueens (not out of the box, `try-it` needs some different ordering)
+- [x] nucleic2 (with custom `<`)
+- [ ] nucleic3 (fixble with custom `<` on structs)
+- [ ] paraffins (`loop` goes up from lower bound)
+- [ ] peval (set-car!)
+- [ ] psyntax (looks big)
+- [ ] puzzle (weird stuff)
+- [ ] ray (took forever with custom `<`, but looks terminating)
+- [ ] sboyer (looks fixable with some ordering)
+- [ ] scheme-c (set-cdr!)
+- [ ] scheme-c2 (TODO investigate)
+- [ ] scheme-i (set-cdr!)
+- [ ] scheme-i2 (looks fixable with loop specialization)
+- [ ] scheme (set-cdr!)
+- [x] scheme2
+- [ ] sort1 (set-cdr!)
+- [x] tak
+- [x] takl (speeded up with custom ordering)
+- [x] takr
+- [x] takr2
+- [ ] traverse (set-car!)
+- [ ] triangle (`ttry` goes up from lower bound)

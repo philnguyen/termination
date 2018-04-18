@@ -1082,21 +1082,21 @@
                         "seven" "eight" "nine" "ten" "eleven" "twelve")
                 string<?)))
 
-(module order racket/base
-  (provide ≺)
-  (require racket/match)
+(require racket/match
+         racket/splicing
+         "../main.rkt")
+(splicing-local
+    ((define-syntax-rule (#%app f x ...) (#%plain-app f x ...))
+     (define (e≺ e₁ e₂) (< (node-count e₁) (node-count e₂)))
+     (define node-count
+       (match-lambda
+         [(cons l r) (+ 1 (node-count l) (node-count r))]
+         [_ 1])))
   (define (≺ l r)
     (cond [(and (list? l) (list? r)) (< (length l) (length r))]
           [(and (vector? l) (vector? r) (= (vector-length l) (vector-length r)))
            (for/or ([x (in-vector l)] [y (in-vector r)])
              (≺ x y))]
-          [else (e≺ l r)]))
-  (define (e≺ e₁ e₂) (< (node-count e₁) (node-count e₂)))
-  (define node-count
-    (match-lambda
-      [(cons l r) (+ 1 (node-count l) (node-count r))]
-      [_ 1])))
-
-(require "../main.rkt" 'order)
+          [else (e≺ l r)])))
 (time (with-custom-< ≺
         (begin/termination (scheme-eval expr1))))

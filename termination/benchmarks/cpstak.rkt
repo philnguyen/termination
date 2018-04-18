@@ -30,32 +30,13 @@
                            (lambda (v3)
                              (tak v1 v2 v3 k)))))))))
   (tak x y z (lambda (a) a)))
+ 
+;;; call: (cpstak 18 12 6)
 
-#;(time (cpstak 18 12 6))
-
-(begin
-  (require "../main.rkt")
-  (time (begin/termination (cpstak 18 12 6))))
-
-#| Can't do automatically in Lean either
-def filter (p: nat -> bool): list nat → list nat
-| []       := []
-| (a :: l) :=
-  match p a with
-  |  tt := a :: filter l
-  |  ff := filter l
-  end
-
-def lt: nat -> nat -> bool
-| (m + 1) (n + 1) := lt m n
-| 0 _ := ff
-| _ _ := tt
-
-def tak : nat -> nat -> nat -> (nat -> nat) -> nat
-| (x+1) (y+1) (z+1) k :=
-  match lt y x with
-  | tt := tak x (y+1) (z+1) (fun v1, tak y (z+1) (x+1) (fun v2, tak z (x+1) (y+1) (fun v3, tak v1 v2 v3 k)))
-  | ff := k (z+1)
-  end
-| _ _ _ _ := 42
-|#
+(require "../main.rkt")
+(time (begin/termination ; can't, CPS conflat return with call
+        (let loop ((n 20) (v 0))
+          (if (zero? n)
+              v
+              (loop (- n 1)
+                    (cpstak 18 12 6))))))

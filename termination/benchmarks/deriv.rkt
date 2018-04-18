@@ -48,7 +48,7 @@
  
 (define (run)
   (do ((i 0 (+ i 1)))
-      ((= i 1000))
+      ((= i 1000000))
     (deriv '(+ (* 3 x x) (* a x x) (* b x) 5))
     (deriv '(+ (* 3 x x) (* a x x) (* b x) 5))
     (deriv '(+ (* 3 x x) (* a x x) (* b x) 5))
@@ -56,7 +56,6 @@
     (deriv '(+ (* 3 x x) (* a x x) (* b x) 5))))
  
 ;;; call:  (run)
- 
-(begin
-  (require "../main.rkt")
-  (time (begin/termination (run))))
+
+(require "../main.rkt")
+(time (begin/termination (run)))

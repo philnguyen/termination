@@ -24,5 +24,4 @@
 
 (begin
   (require "../main.rkt")
-  (collect-garbage) (collect-garbage) (collect-garbage)
   (time (begin/termination (tak 18 12 6))))

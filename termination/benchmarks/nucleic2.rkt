@@ -3508,5 +3508,20 @@
 ; To run program, evaluate: (run)
 
 (require "../main.rkt")
-(time (begin/termination (run)))
+(module order racket/base
+  (provide ≺)
+  (require racket/list)
+  (define (≺ l r)
+    (cond [(and (list? l) (vector? r))
+           (for/or ([r* (in-vector r)])
+             (or (and (vector? r*) (≺ l (vector->list r*)))
+                 (≺ l r*)))]
+          [(and (list? l) (list? r))
+           (or (< (length l) (length r))
+               (for/or ([r* (in-list r)])
+                 (or (equal? l r*) (≺ l r*))))]
+          [else #f])))
+(require 'order)
+(time (with-custom-< ≺
+        (begin/termination (run))))
 
