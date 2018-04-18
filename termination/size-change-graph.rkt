@@ -1,18 +1,15 @@
 #lang typed/racket/base
 
 (require racket/match
-         racket/set
-         racket/list
-         racket/string
-         racket/unsafe/ops
          typed/racket/unsafe
-         syntax/parse/define
          "flattened-parameter.rkt")
 
-;; `unsafe-provide` to get around contracts messing with functions as hash-table keys
-(unsafe-provide divergence-allowed?
-                apply/termination
-                (rename-out [with-<? with-custom-<]))
+(provide SC-Graph
+         init-sc-graph
+         make-sc-graph
+         concat-graph
+         strictly-descending?)
+(unsafe-provide with-<?)
 
 ;; A size-change graph tracks how a function calls itself,
 ;; where each edge denotes a "must" non-ascendence between argument indices
@@ -23,63 +20,6 @@
 ;; - '↧` is definite non-ascendence
 ;; - `#f` is conservative "don't know"
 (define-type Dec (U '↓ '↧))
-
-(struct Record ([last-examined-args : (Listof Any)]
-                [last-sc-graph : SC-Graph])
-  #:transparent)
-
-(define-type Call-Stack (Immutable-HashTable Procedure (Pairof Call-Stack (Option (Pairof Positive-Integer Record)))))
-
-(define mt-call-stack : Call-Stack (hasheq))
-(define-parameter call-stack : Call-Stack mt-call-stack)
-
-;; The empty call-stack is absused as a "not checking" flag.
-;; When termination checking starts, it always pushes to the call-stack.
-(define (divergence-allowed?) (eq? mt-call-stack (call-stack)))
-
-(: apply/termination (∀ (X Y) (X * → Y) X * → Y))
-;; Mark size-change progress before executing the body
-(define (apply/termination f . xs)
-  (define cs (call-stack))
-  (define rec*
-    (match (hash-ref cs f #f)
-      [(cons cs₀ ?rec₀)
-       (match ?rec₀
-         [(cons n₀ r₀)
-          (define n (add1 n₀))
-          (define r (if (zero? (unsafe-fxand n n₀)) (update-sc-graph r₀ f xs) r₀))
-          (cons n r)]
-         [_ (cons 1 (Record xs (init-sc-graph (length xs))))])]
-      [_ #f]))
-  (with-call-stack (hash-set cs f (cons cs rec*))
-    (apply f xs)))
-
-(: update-sc-graph : Record Procedure (Listof Any) → Record)
-;; Update function `f`'s call record, accumulating observed ways in which it transitions to itself
-(define (update-sc-graph r₀ f xs)
-  (match-define (Record xs₀ G₀) r₀)
-  (define G (mk-graph xs₀ xs))
-  (cond [(strictly-descending? G)
-         (define G* (concat-graph G₀ G))
-         (cond [(strictly-descending? G*) (Record xs G*)]
-               [else (err G₀ G f xs₀ xs)])]
-        [else (err G₀ G f xs₀ xs)]))
-
-(: err : SC-Graph SC-Graph Procedure (Listof Any) (Listof Any) → Nothing)
-(define (err G₀ G f xs₀ xs)
-  (define (graph->lines [G : SC-Graph])
-    (for/list : (Listof String) ([(edge ↝) (in-hash G)])
-      (format "  * ~a ~a ~a" (car edge) ↝ (cdr edge))))
-  (define (args->lines [xs : (Listof Any)])
-    (for/list : (Listof String) ([(x i) (in-indexed xs)])
-      (format "  * arg ~a: ~a" i x)))
-  (define lines
-    `(,(format "Recursive call to `~a` has no obvious descendence on any argument" f)
-      "- Preceding call:"  ,@(args->lines xs₀)
-      "- Subsequent call:" ,@(args->lines xs)
-      "Initial graph:" ,@(graph->lines G₀)
-      "Step graph:"    ,@(graph->lines G)))
-  (error 'possible-non-termination (string-join lines "\n")))
 
 (: strictly-descending? : SC-Graph → Boolean)
 (define (strictly-descending? G) (for/or ([d (in-hash-values G)]) (eq? d '↓)))
@@ -104,14 +44,19 @@
                  (λ ([↝₀ : Dec]) (Dec-best ↝₀ ↝₁ ↝₂))
                  (λ () '↧))))
 
-(: mk-graph : (Listof Any) (Listof Any) → SC-Graph)
+(: make-sc-graph : (Listof Any) (Listof Any) → SC-Graph)
 ;; Make size-change graph from comparing old and new argument lists
-(define (mk-graph xs₀ xs₁)
+(define (make-sc-graph xs₀ xs₁)
   (define cmp (let ([≺ (<?)]) (λ (x y) (if (equal? x y) '↧ (and (≺ y x) '↓)))))
   (for*/hash : SC-Graph ([(v₀ i₀) (in-indexed xs₀)]
                                   [(v₁ i₁) (in-indexed xs₁)]
                                   [?↓ (in-value (cmp v₀ v₁))] #:when ?↓)
     (values (cons i₀ i₁) ?↓)))
+
+(define Dec-best : (Dec * → Dec)
+  (match-lambda*
+   [(list '↧ ...) '↧]
+   [_ '↓]))
 
 (: <?:default : Any Any → Boolean)
 ;; Simple default implementation of well-founded strict partial order on data
@@ -124,8 +69,3 @@
         [else #f]))
 
 (define-parameter <? : (Any Any → Boolean) <?:default)
-
-(define Dec-best : (Dec * → Dec)
-  (match-lambda*
-   [(list '↧ ...) '↧]
-   [_ '↓]))

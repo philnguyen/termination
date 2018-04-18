@@ -4,14 +4,13 @@
          terminating-function/c
          define/termination
          begin/termination
-         with-custom-<
-         )
+         (rename-out [with-<? with-custom-<]))
 
 (require (for-syntax racket/base
                      racket/syntax
                      syntax/parse)
          racket/unsafe/ops
-         "size-change-graph.rkt")
+         "apply-with-termination.rkt")
 
 (struct terminating-function (unwrapped) #:transparent
   #:property prop:procedure 0)
@@ -29,7 +28,7 @@
   (require racket/base)
   (define-syntax-class fin
     #:description "recognized terminating functions"
-    ;; TODO fix ugly hack
+    ;; FIXME ugly hack
     (pattern p:id #:when (with-handlers ([exn? (λ _ #f)])
                            (primitive? (eval (format-id #'dummy "~a" #'p)))))))
 
@@ -43,6 +42,6 @@
                [x arg] ...)
            (cond [(terminating-function? f)
                   (apply/termination (unsafe-struct-ref f 0) x ...)]
-                 [(divergence-allowed?)
+                 [(divergence-ok?)
                   (f x ...)]
                  [else (apply/termination f x ...)])))]))
