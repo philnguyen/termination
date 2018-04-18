@@ -13,7 +13,9 @@
          "flattened-parameter.rkt"
          "size-change-graph.rkt")
 
-(struct Record ([last-examined-args : (Listof Any)] [last-sc-graph : SC-Graph]) #:transparent)
+(struct Record ([last-examined-args : (Listof Any)]
+                [last-sc-graph : SC-Graph])
+  #:transparent)
 
 (define-type Call-Stack (Immutable-HashTable Procedure (Pairof Call-Stack (Option (Pairof Positive-Integer Record)))))
 (define mt-call-stack : Call-Stack (hasheq))
@@ -33,16 +35,16 @@
        (match ?rec₀
          [(cons n₀ r₀)
           (define n (add1 n₀))
-          (define r (if (zero? (unsafe-fxand n n₀)) (update-sc-graph r₀ f xs) r₀))
+          (define r (if (zero? (unsafe-fxand n n₀)) (update-record r₀ f xs) r₀))
           (cons n r)]
          [_ (cons 1 (Record xs (init-sc-graph (length xs))))])]
       [_ #f]))
   (with-call-stack (hash-set cs f (cons cs rec*))
     (apply f xs)))
 
-(: update-sc-graph : Record Procedure (Listof Any) → Record)
+(: update-record : Record Procedure (Listof Any) → Record)
 ;; Update function `f`'s call record, accumulating observed ways in which it transitions to itself
-(define (update-sc-graph r₀ f xs)
+(define (update-record r₀ f xs)
   (match-define (Record xs₀ G₀) r₀)
   (define G (make-sc-graph xs₀ xs))
   (or (and (strictly-descending? G)
