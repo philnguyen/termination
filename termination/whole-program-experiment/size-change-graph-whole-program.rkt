@@ -7,7 +7,7 @@
          racket/unsafe/ops
          typed/racket/unsafe
          syntax/parse/define
-         "flattened-parameter.rkt")
+         "../flattened-parameter.rkt")
 
 ;; `unsafe-provide` to get around contracts messing with functions as hash-table keys
 (unsafe-provide mt-call-stack
