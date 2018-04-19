@@ -11,13 +11,10 @@ raco pkg install termination
 
 ### Usage
 
-* `(terminating-function/c e)`: ensures `e` computes a function that run finitely on any argument
+* `(terminating-function/c e)`: ensures `e` computes a function that runs finitely on any argument
 * `(define/termination (f x ...) e ...)`: shorthand for `(define f (terminating-function/c (λ (x ...) e ...)))`
 * `(begin/termination e ...)`: shorthand for `((terminating-function/c (λ () e ...)))`
-
-Programmer can provide a custom well-founded partial order through parameter `custom-<?`,
-which is by default `(λ (lhs rhs) #f)`.
-It is on them to ensure the predicate is correct.
+* `(with-custom-< e-< e)`: use custom well-founded partial order computed by `e-<` during the dynamic extent of `e`. It is on the programmer to ensure the order is sound.
 
 ### Examples
 
