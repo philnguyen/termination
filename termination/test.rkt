@@ -178,7 +178,10 @@
     (begin/termination (ev -two))
     (check-exn exn? (λ () (begin/termination (ev '((λ (x) (x x)) (λ (y) (y y))))))))
   
-  (check-exn exn? (λ () (begin/termination (ev '((λ (x) (x x)) (λ (y) (y y))))))))
+  (check-exn exn? (λ () (begin/termination (ev '((λ (x) (x x)) (λ (y) (y y)))))))
+  ;; below only works with `apply-with-specialized-termination`
+  #;(begin/termination (ev '((λ (x) (x x)) (λ (y) y))))
+  )
 
 (let ()
     (define (sort-list obj pred)
@@ -209,3 +212,4 @@
         (sort-list '("one" "two" "three" "four" "five" "six"
                            "seven" "eight" "nine" "ten" "eleven" "twelve")
                    string<?))))
+

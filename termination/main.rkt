@@ -10,7 +10,9 @@
                      racket/syntax
                      syntax/parse)
          racket/unsafe/ops
-         "apply-with-termination.rkt")
+         "apply-with-termination.rkt"
+         ;"apply-with-specialized-termination.rkt"
+         )
 
 (struct terminating-function (unwrapped) #:transparent
   #:property prop:procedure 0)
