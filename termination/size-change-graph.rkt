@@ -58,14 +58,27 @@
    [(list '↧ ...) '↧]
    [_ '↓]))
 
+;; FIXME hack
+(require typed/racket/unsafe)
+(unsafe-require/typed racket/base
+                      [mcar (MPairTop → Any)]
+                      [mcdr (MPairTop → Any)])
 (: <?:default : Any Any → Boolean)
 ;; Simple default implementation of well-founded strict partial order on data
 (define (<?:default x y)
+  (define (≤? x y) (or (equal? x y) (<?:default x y)))
+  
   (cond [(integer? y) (and (integer? x) (< -1 x y))]
-        [(pair? y) (or (equal? x (car y))
-                       (equal? x (cdr y))
-                       (<?:default x (car y))
-                       (<?:default x (cdr y)))]
+        [(pair? y) (or (≤? x (car y))
+                       (≤? x (cdr y))
+                       (and (pair? x)
+                            (or (<?:default (car x) (car y))
+                                (<?:default (cdr x) (cdr y)))))]
+        [(mpair? y) (or (≤? x (mcar y))
+                        (≤? x (mcdr y))
+                        (and (mpair? x)
+                             (or (<?:default (mcar x) (mcar y))
+                                 (<?:default (mcdr x) (mcdr y)))))]
         [else #f]))
 
 (define-parameter <? : (Any Any → Boolean) <?:default)
