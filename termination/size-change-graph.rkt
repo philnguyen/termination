@@ -71,12 +71,12 @@
   (cond [(integer? y) (and (integer? x) (< -1 x y))]
         [(pair? y) (or (≤? x (car y))
                        (≤? x (cdr y))
-                       (and (pair? x)
+                       #;(and (pair? x)
                             (or (<?:default (car x) (car y))
                                 (<?:default (cdr x) (cdr y)))))]
         [(mpair? y) (or (≤? x (mcar y))
                         (≤? x (mcdr y))
-                        (and (mpair? x)
+                        #;(and (mpair? x)
                              (or (<?:default (mcar x) (mcar y))
                                  (<?:default (mcdr x) (mcdr y)))))]
         [else #f]))
