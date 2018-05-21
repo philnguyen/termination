@@ -2,7 +2,10 @@
 
 (define collection "termination")
 
-(define deps '("base"
+(define deps '("profile-lib"
+               "r5rs-lib"
+               "rackunit-lib"
+               "base"
                "typed-racket-lib"
                "typed-racket-more"))
 
