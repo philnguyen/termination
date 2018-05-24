@@ -49,8 +49,8 @@
 (define (make-sc-graph xs₀ xs₁)
   (define cmp (let ([≺ (<?)]) (λ (x y) (if (equal? x y) '↧ (and (≺ y x) '↓)))))
   (for*/hash : SC-Graph ([(v₀ i₀) (in-indexed xs₀)]
-                                  [(v₁ i₁) (in-indexed xs₁)]
-                                  [?↓ (in-value (cmp v₀ v₁))] #:when ?↓)
+                         [(v₁ i₁) (in-indexed xs₁)]
+                         [?↓ (in-value (cmp v₀ v₁))] #:when ?↓)
     (values (cons i₀ i₁) ?↓)))
 
 (define Dec-best : (Dec * → Dec)

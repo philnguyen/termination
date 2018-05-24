@@ -11,15 +11,15 @@ Convenient whole programs for measuring overhead over known terminating programs
 - [x] deriv
 - [x] destruct
 - [x] div
-- ~~[ ] dynamic~~
+- [ ] ~~dynamic~~
 - [ ] dynamic2 (input)
 - [ ] early ((loop) decreases on mutable states)
 - [ ] fft ((loop) decreases on mutable states)
 - [ ] graphs (imperative loop 1 -> vector size)
 - [ ] kanren (`unify-internals`)
-- ~~[ ] lattice~~
+- [ ] ~~lattice~~
 - [ ] lattice2 (`map` with non-obvious descendence)
-- ~~[ ] maze~~
+- [ ] ~~maze~~
 - [ ] maze2 (`lp` involve descending on mutable states)
 - [ ] mazefun (`for-aux` goes up from `lo`, fixable with custom ordering)
 - [ ] nboyer (`rewrite-args`, looks fixable with custom ordering)
@@ -34,11 +34,11 @@ Convenient whole programs for measuring overhead over known terminating programs
 - [ ] puzzle (weird stuff)
 - [ ] ray (took forever with custom `<`, but looks terminating)
 - [ ] sboyer (looks fixable with some ordering)
-- ~~[ ] scheme-c~~
+- [ ] ~~scheme-c~~
 - [x] scheme-c2
-- ~~[ ] scheme-i~~
+- [ ] ~~scheme-i~~
 - [ ] scheme-i2 (looks fixable with loop specialization)
-- ~~[ ] scheme~~
+- [ ] ~~scheme~~
 - [x] scheme2
 - [x] sort1
 - [x] tak

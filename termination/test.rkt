@@ -213,3 +213,10 @@
                            "seven" "eight" "nine" "ten" "eleven" "twelve")
                    string<?))))
 
+(let ()
+  (define (f x)
+    (define g (cond [(> x 0) (compose f sub1)]
+                    [(< x 0) (compose f add1)]
+                    [else values]))
+    (g x))
+  (begin/termination (f 3)))
