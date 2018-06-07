@@ -49,9 +49,15 @@
 ;;; for the iterative test call: (test-1 *ll*)
 ;;; for the recursive test call: (test-2 *ll*)
 
-(require "../main.rkt")
-(time (begin/termination
-        (let loop ((n 200) (v 0))
+(require #;"../main.rkt")
+(time (let loop ((n 2) (v 0))
+          (if (zero? n)
+              v
+              (loop (- n 1)
+                    (cons
+                     (test-1 *ll*)
+                     (test-2 *ll*))))) #;(begin/termination
+        (let loop ((n 2) (v 0))
           (if (zero? n)
               v
               (loop (- n 1)

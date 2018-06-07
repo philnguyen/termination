@@ -64,8 +64,13 @@
  
 ;;; call:  (destructive 600 50)
 
-(require "../main.rkt")
-(time (begin/termination
+(collect-garbage) (collect-garbage) (collect-garbage)
+(require #;"../main.rkt")
+(time (let loop ((n 100) (v 0))
+          (if (zero? n)
+              'v
+              (loop (- n 1)
+                    (destructive 600 500)))) #;(begin/termination
         (let loop ((n 100) (v 0))
           (if (zero? n)
               'v
