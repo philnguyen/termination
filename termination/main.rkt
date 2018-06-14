@@ -8,7 +8,8 @@
 
 (require (for-syntax racket/base
                      racket/syntax
-                     syntax/parse)
+                     syntax/parse
+                     racket/match)
          racket/unsafe/ops
          "apply-with-termination.rkt"
          ;"apply-with-specialized-termination.rkt"
@@ -28,16 +29,31 @@
 
 (begin-for-syntax
   (require racket/base)
+
+  (define (prim? id)
+    (match (identifier-binding id)
+      [(cons (app module-path-index-resolve (app resolved-module-path-name '#%kernel)) _)
+       #t]
+      [_ #f]))
+  
   (define-syntax-class fin
     #:description "recognized terminating functions"
     ;; FIXME ugly hack
-    (pattern p:id #:when (with-handlers ([exn? (λ _ #f)])
-                           (primitive? (eval (format-id #'dummy "~a" #'p)))))))
+    (pattern p:id #:when (prim? #'p))))
 
 (define-syntax -app
   (syntax-parser
     [(_ fun:fin arg ...)
      #'(fun arg ...)]
+    #;[(_ fun arg)
+     (with-syntax ([x (generate-temporary #'arg)])
+       #'(let ([f fun]
+               [x arg])
+           (cond [(terminating-function? f)
+                  (apply/termination¹ (unsafe-struct-ref f 0) x)]
+                 [(divergence-ok?)
+                  (f x)]
+                 [else (apply/termination¹ f x)])))]
     [(_ fun arg ...)
      (with-syntax ([(x ...) (generate-temporaries #'(arg ...))])
        #'(let ([f fun]

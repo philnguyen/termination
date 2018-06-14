@@ -3,6 +3,7 @@
 ;; `unsafe-provide` to get around contracts messing with function identities (e.g. in `hasheq`)
 (require typed/racket/unsafe)
 (unsafe-provide apply/termination
+                #;apply/termination¹
                 divergence-ok?
                 with-<?)
 
@@ -17,6 +18,11 @@
                 [last-sc-graph : SC-Graph])
   #:transparent)
 
+;; A Call-Stack maps each function to the prefix that result in it, modulo loops
+;; Conceptually, it is an associated list of ⟨function, prefix⟩ that supports constant-time lookup
+;; For most functions, the prefix is paired with `#f`
+;; For functions that are detected as loop entries, the prefix is paired with `⟨n, R⟩`,
+;; where `n` counts up the iteration it's been called, and `R` is the size-change graph.
 (define-type Call-Stack (Immutable-HashTable Procedure (Pairof Call-Stack (Option (Pairof Positive-Integer Record)))))
 (define mt-call-stack : Call-Stack (hasheq))
 (define-parameter call-stack : Call-Stack mt-call-stack)
@@ -31,16 +37,43 @@
   (define cs (call-stack))
   (define rec*
     (match (hash-ref cs f #f)
+      ;; Function has previous been on the call stack. It's a loop entry
+      [(cons cs₀ ?rec₀)
+       (match ?rec₀
+         ;; At the `n₀`th iteration with previous record `r₀`
+         [(cons n₀ r₀)
+          (define n (add1 n₀))
+          ;; If the `n`th iteration is a power of 2, guard against size-change violation
+          ;; otherwise use old record
+          (define r (if (zero? (unsafe-fxand n n₀)) (update-record r₀ f xs) r₀))
+          (cons n r)]
+         ;; No previous record. This is the 2nd iteration.
+         [_ (cons 1 (Record xs (init-sc-graph (length xs))))])]
+      ;; Function is not a loop entry
+      [_ #f]))
+  ;; Proceed with current function pushed on stack
+  (with-call-stack (hash-set cs f (cons cs rec*))
+    (apply f xs)))
+
+#|
+(: apply/termination¹ (∀ (X Y) (X → Y) X → Y))
+;; Mark size-change progress before executing the body
+;; Experimented special case for arity 1 to avoid apply
+(define (apply/termination¹ f x)
+  (define cs (call-stack))
+  (define rec*
+    (match (hash-ref cs f #f)
       [(cons cs₀ ?rec₀)
        (match ?rec₀
          [(cons n₀ r₀)
           (define n (add1 n₀))
-          (define r (if (zero? (unsafe-fxand n n₀)) (update-record r₀ f xs) r₀))
+          (define r (if (zero? (unsafe-fxand n n₀)) (update-record r₀ f (list x)) r₀))
           (cons n r)]
-         [_ (cons 1 (Record xs (init-sc-graph (length xs))))])]
+         [_ (cons 1 (Record (list x) (init-sc-graph 1)))])]
       [_ #f]))
   (with-call-stack (hash-set cs f (cons cs rec*))
-    (apply f xs)))
+    (f x)))
+|#
 
 (: update-record : Record Procedure (Listof Any) → Record)
 ;; Update function `f`'s call record, accumulating observed ways in which it transitions to itself

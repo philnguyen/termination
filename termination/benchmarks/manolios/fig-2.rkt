@@ -18,6 +18,10 @@
 (with-custom-< ≺/abs
   (begin/termination (f -10))
   (begin/termination (f 10))
-  (begin/termination (foo 4 5))
-  (begin/termination (foo -3 -2)) ; fail :(
-  )
+  (begin/termination (foo 4 5)))
+
+;; `foo` on negatives need custom ordering
+(with-custom-≺ (λ (≺ x y)
+                 (define-syntax-rule (normalize x) (if (>= x 0) x (- 255 x)))
+                 (< (normalize x) (normalize y)))
+  (begin/termination (foo -3 -2)))
