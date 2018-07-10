@@ -26,15 +26,19 @@ fun ack :: "nat \<Rightarrow> nat \<Rightarrow> nat" where
                             ack (m-1) (ack m (n-1))))"
 
 (* Ex 4 *)
-fun p :: "nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat" where
+function p :: "nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat" where
   "p m n r = (if r > 0 then p m (r-1) n else
              (if n > 0 then p r (n-1) m else m))"
+by pat_completeness auto
+termination by size_change
 
 (* Ex 5 *)
-fun f :: "'a list \<Rightarrow> 'a list \<Rightarrow> 'a list" where
+function f :: "'a list \<Rightarrow> 'a list \<Rightarrow> 'a list" where
   "f x y = (if y = [] then x else
            (if x = [] then f y (tl y) else
                            f y (tl x)))"
+by pat_completeness auto
+termination by size_change
 
 (* Ex 6 *)
 fun f6 :: "'a list \<Rightarrow> 'a list \<Rightarrow> 'a list"
