@@ -13,11 +13,11 @@ f n | n == 0    = \x -> x+1
 
 ----- Later in 1.2
 foldr :: (a -> b -> b) -> b -> [a] -> b
-foldr h a xs | null xs   = a
-             | otherwise = h (head xs) (foldr h a (tail xs))
+foldr h a [] = a
+foldr h a xs = h (head xs) (foldr h a (tail xs))
 foldl :: (b -> a -> b) -> b -> [a] -> b
-foldl h a xs | null xs   = a
-             | otherwise = foldl h (h a (head xs)) (tail xs) 
+foldl h a [] = a
+foldl h a xs = foldl h (h a (head xs)) (tail xs) 
 reverse :: [a] -> [a]
 reverse xs = foldl (\ys x -> x:ys) [] xs
 append :: [a] -> [a] -> [a]

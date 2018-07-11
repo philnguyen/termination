@@ -3,6 +3,7 @@ import Prelude hiding ((!!), length, foldl, foldr, reverse, append, concat)
 import Language.Haskell.Liquid.Prelude
 
 ----- Fig 2
+{-@ f :: n:Int -> Int / [n * n] @-}
 f :: Int -> Int
 f x | x == 0    = 0
     | x < 0     = f (x+1)
