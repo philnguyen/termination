@@ -12,6 +12,7 @@
                      racket/match)
          racket/unsafe/ops
          "apply-with-termination.rkt"
+         ;"apply-with-termination-breaking-tail-calls.rkt"
          )
 
 (struct terminating-function (unwrapped) #:transparent
@@ -31,8 +32,8 @@
 
   (define (prim? id)
     (match (identifier-binding id)
-      [(cons (app module-path-index-resolve (app resolved-module-path-name '#%kernel)) _)
-       #t]
+      [(cons (app module-path-index-resolve (app resolved-module-path-name name)) _)
+       (memq name '(#%kernel #%runtime))]
       [_ #f]))
   
   (define-syntax-class fin

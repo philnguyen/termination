@@ -3,7 +3,6 @@
 ;; `unsafe-provide` to get around contracts messing with function identities (e.g. in `hasheq`)
 (require typed/racket/unsafe)
 (unsafe-provide apply/termination
-                #;apply/termination¹
                 divergence-ok?
                 with-<?)
 
