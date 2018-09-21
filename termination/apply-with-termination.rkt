@@ -55,26 +55,6 @@
   (with-call-stack (hash-set cs f (cons cs rec*))
     (apply f xs)))
 
-#|
-(: apply/termination¹ (∀ (X Y) (X → Y) X → Y))
-;; Mark size-change progress before executing the body
-;; Experimented special case for arity 1 to avoid apply
-(define (apply/termination¹ f x)
-  (define cs (call-stack))
-  (define rec*
-    (match (hash-ref cs f #f)
-      [(cons cs₀ ?rec₀)
-       (match ?rec₀
-         [(cons n₀ r₀)
-          (define n (add1 n₀))
-          (define r (if (zero? (unsafe-fxand n n₀)) (update-record r₀ f (list x)) r₀))
-          (cons n r)]
-         [_ (cons 1 (Record (list x) (init-sc-graph 1)))])]
-      [_ #f]))
-  (with-call-stack (hash-set cs f (cons cs rec*))
-    (f x)))
-|#
-
 (: update-record : Record Procedure (Listof Any) → Record)
 ;; Update function `f`'s call record, accumulating observed ways in which it transitions to itself
 (define (update-record r₀ f xs)
@@ -83,7 +63,7 @@
   (or (and (strictly-descending? G)
            (let ([G* (concat-graph G₀ G)])
              (and (strictly-descending? G*) (Record xs G*))))
-      (err G₀ G f xs₀ xs)))
+      (err G₀ G f xs₀ xs))) 
 
 (: err : SC-Graph SC-Graph Procedure (Listof Any) (Listof Any) → Nothing)
 (define (err G₀ G f xs₀ xs)

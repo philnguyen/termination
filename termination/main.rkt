@@ -12,7 +12,6 @@
                      racket/match)
          racket/unsafe/ops
          "apply-with-termination.rkt"
-         ;"apply-with-specialized-termination.rkt"
          )
 
 (struct terminating-function (unwrapped) #:transparent
@@ -45,15 +44,6 @@
   (syntax-parser
     [(_ fun:fin arg ...)
      #'(fun arg ...)]
-    #;[(_ fun arg)
-     (with-syntax ([x (generate-temporary #'arg)])
-       #'(let ([f fun]
-               [x arg])
-           (cond [(terminating-function? f)
-                  (apply/termination¹ (unsafe-struct-ref f 0) x)]
-                 [(divergence-ok?)
-                  (f x)]
-                 [else (apply/termination¹ f x)])))]
     [(_ fun arg ...)
      (with-syntax ([(x ...) (generate-temporaries #'(arg ...))])
        #'(let ([f fun]
