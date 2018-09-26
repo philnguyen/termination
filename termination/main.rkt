@@ -21,8 +21,21 @@
 (define (terminating-function/c f)
   (if (or (primitive? f) (terminating-function? f)) f (terminating-function f)))
 
-(define-syntax-rule (define/termination (f x ...) e)
-  (define f (terminating-function (λ (x ...) e))))
+(begin-for-syntax
+  (define (with-syntax-source src stx)
+    (datum->syntax src
+                   (syntax-e stx)
+                   (list (syntax-source src)
+                         (syntax-line src)
+                         (syntax-column src)
+                         (syntax-position src)
+                         (syntax-span src)))))
+
+(define-syntax define/termination
+  (syntax-parser
+    [(_ (~and lhs (f x ...)) e ...)
+     (with-syntax ([gen-lam (with-syntax-source #'lhs #'(λ (x ...) e ...))])
+       #'(define f (terminating-function gen-lam)))]))
 
 (define-syntax-rule (begin/termination e ...)
   (-app (terminating-function (λ () e ...))))
