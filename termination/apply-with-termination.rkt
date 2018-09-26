@@ -9,12 +9,13 @@
 (require racket/match
          racket/list
          racket/string
+         racket/set
          racket/unsafe/ops
          "flattened-parameter.rkt"
          "size-change-graph.rkt")
 
 (struct Record ([last-examined-args : (Listof Any)]
-                [last-sc-graph : SC-Graph])
+                [sc-graphs : (Setof SC-Graph)])
   #:transparent)
 
 ;; A Call-Stack maps each function to the prefix that result in it, modulo loops
@@ -47,7 +48,7 @@
           (define r (if (zero? (unsafe-fxand n n₀)) (update-record r₀ f xs) r₀))
           (cons n r)]
          ;; No previous record. This is the 2nd iteration.
-         [_ (cons 1 (Record xs (init-sc-graph (length xs))))])]
+         [_ (cons 1 (Record xs {set (init-sc-graph (length xs))}))])]
       ;; Function is not a loop entry
       [_ #f]))
   ;; Proceed with current function pushed on stack
@@ -57,16 +58,16 @@
 (: update-record : Record Procedure (Listof Any) → Record)
 ;; Update function `f`'s call record, accumulating observed ways in which it transitions to itself
 (define (update-record r₀ f xs)
-  (match-define (Record xs₀ G₀) r₀)
-  (define G (make-sc-graph xs₀ xs))
-  (or (and (strictly-descending? G)
-           (let ([G* (concat-graph G₀ G)])
-             (and (strictly-descending? G*) (Record xs G*))))
-      (err G₀ G f xs₀ xs))) 
+  (match-define (Record xs₀ Gs₀) r₀)
+  (define Gs (set-add Gs₀ (make-sc-graph xs₀ xs)))
+  (define Gs* (transitive-closure Gs))
+  (match (find-sc-violation Gs*)
+    [(? values G-err) (err G-err f xs₀ xs)]
+    [_ (Record xs Gs*)])) 
 
-(: err : SC-Graph SC-Graph Procedure (Listof Any) (Listof Any) → Nothing)
-(define (err G₀ G f xs₀ xs)
-  (define (graph->lines [G : SC-Graph])
+(: err : SC-Graph Procedure (Listof Any) (Listof Any) → Nothing)
+(define (err G f xs₀ xs)
+  (define (graph->lines [Gs : SC-Graph])
     (for/list : (Listof String) ([(edge ↝) (in-hash G)])
       (format "  * ~a ~a ~a" (car edge) ↝ (cdr edge))))
   (define (args->lines [xs : (Listof Any)])
@@ -87,7 +88,6 @@
     `(,(format "Recursive call to `~a` has no obvious descendence on any argument" f)
       "- Preceding call:"  ,@(args->lines xs₀)
       "- Subsequent call:" ,@(args->lines xs)
-      "Initial graph:" ,@(graph->lines G₀)
-      "Step graph:"    ,@(graph->lines G)
+      "Size-change violating graph:" ,@(graph->lines G)
       "Call stack:" ,@(stack->lines)))
   (error 'possible-non-termination (string-join lines "\n")))

@@ -6,7 +6,6 @@
          rackunit
          "main.rkt")
 
-
 (let () ; decreasing on `y` can't fool the checker
   (define (f x y)
     (if (zero? x)
@@ -133,3 +132,15 @@
                     [else values]))
     (g x))
   (begin/termination (f 3)))
+
+
+;; Tests revealing errors in initial implementation pointed out by Amir ben-Amram
+(let ()
+  (define/termination (f x y z)
+    (match* (x y z)
+      [(1 2 3) (f 1 2 0)]
+      [(1 2 0) (f 2 1 0)]
+      [(2 1 0) (f 1 2 0)]))
+  (check-exn exn? (λ () (f 1 2 3)))
+  (define/termination (g x y) (g y x))
+  (check-exn exn? (λ () (g 1 2))))

@@ -1,6 +1,7 @@
 #lang typed/racket/base
 
 (require racket/match
+         racket/set
          typed/racket/unsafe
          "flattened-parameter.rkt")
 
@@ -8,7 +9,8 @@
          init-sc-graph
          make-sc-graph
          concat-graph
-         strictly-descending?)
+         transitive-closure
+         find-sc-violation)
 (unsafe-provide with-<?)
 
 ;; A size-change graph tracks how a function calls itself,
@@ -21,9 +23,6 @@
 ;; - `#f` is conservative "don't know"
 (define-type Dec (U '↓ '↧))
 
-(: strictly-descending? : SC-Graph → Boolean)
-(define (strictly-descending? G) (for/or ([d (in-hash-values G)]) (eq? d '↓)))
-
 (: init-sc-graph : Index → SC-Graph)
 ;; Initial size-change graph, where each argument have not ascended from any value
 (define init-sc-graph
@@ -31,7 +30,7 @@
     (λ (n)
       (hash-ref! cache n
                  (λ () (for/hash : SC-Graph ([i (in-range n)])
-                         (values (cons i i) '↧)))))))
+                         (values (cons i i) '↓)))))))
 
 (: concat-graph : SC-Graph SC-Graph → SC-Graph)
 (define (concat-graph G₁ G₂)
@@ -43,6 +42,27 @@
     (hash-update G* (cons (car edge₁) (cdr edge₂))
                  (λ ([↝₀ : Dec]) (Dec-best ↝₀ ↝₁ ↝₂))
                  (λ () '↧))))
+
+(: transitive-closure : (Setof SC-Graph) → (Setof SC-Graph))
+(define (transitive-closure Gs)
+  (: step : (Setof SC-Graph) → (Setof SC-Graph))
+  (define (step Gs)
+    (set-union Gs
+               (for*/set: : (Setof SC-Graph) ([G₁ : SC-Graph (in-set Gs)]
+                                              [G₂ : SC-Graph (in-set Gs)])
+                 (concat-graph G₁ G₂))))
+  (let fix ([Gs : (Setof SC-Graph) Gs])
+    (define Gs* (step Gs))
+    (if (= (set-count Gs) (set-count Gs*)) Gs (fix Gs*))))
+
+(: find-sc-violation : (Setof SC-Graph) → (Option SC-Graph))
+(define (find-sc-violation Gs)
+  (for/or : (Option SC-Graph) ([G : SC-Graph (in-set Gs)]
+                               #:when (equal? G (concat-graph G G))
+                               #:unless (for/or : Boolean ([(edge dec) (in-hash G)])
+                                          (and (eq? dec '↓)
+                                               (eq? (car edge) (cdr edge)))))
+    G))
 
 (: make-sc-graph : (Listof Any) (Listof Any) → SC-Graph)
 ;; Make size-change graph from comparing old and new argument lists
