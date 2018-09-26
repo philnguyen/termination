@@ -95,10 +95,12 @@
 (define (update-record r f xs)
   (match-define (Record xs₀ Gs₀) r)
   (define Gs (set-add Gs₀ (make-sc-graph xs₀ xs)))
-  (define Gs* (transitive-closure Gs))
-  (match (find-sc-violation Gs*)
-    [(? values G-err) (err G-err f xs₀ xs)]
-    [_ Gs*]))
+  (if (= (set-count Gs₀) (set-count Gs))
+      Gs₀ ; if nothing new, no need to recompute transitive closure and check
+      (let ([Gs* (transitive-closure Gs)])
+        (match (find-sc-violation Gs*)
+          [(? values G-err) (err G-err f xs₀ xs)]
+          [_ Gs*]))))
 
 (: err : SC-Graph Procedure (Listof Any) (Listof Any) → Nothing)
 (define (err G f xs₀ xs)
