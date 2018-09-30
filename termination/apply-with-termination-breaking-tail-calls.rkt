@@ -14,12 +14,12 @@
          "size-change-graph.rkt")
 
 (struct Record ([last-examined-args : (Listof Any)]
-                [last-sc-graph : (Setof SC-Graph)])
+                [last-sc-graph : (Pairof SC-Graph (Listof SC-Graph))])
   #:mutable
   #:transparent)
 
 ;; hack just to see limit
-#;(define-syntax dynamic-wind
+(define-syntax dynamic-wind
   (syntax-rules (λ)
     [(_ (λ () e₁ ...)
         exec
@@ -45,7 +45,7 @@
 
   (define (exec/mark-first-loop)
     (dynamic-wind
-      (λ () (hash-set! call-stack f ((inst mcons Positive-Integer Record) 1 (Record xs {set (init-sc-graph (length xs))}))))
+      (λ () (hash-set! call-stack f ((inst mcons Positive-Integer Record) 1 (Record xs (list (init-sc-graph (length xs)))))))
       exec
       (λ () (hash-set! call-stack f #t))))
 
@@ -91,16 +91,13 @@
     ;; `f` is seen first time in this call chain
     [else (exec/mark-seen)]))
 
-(: update-record : Record Procedure (Listof Any) → (Setof SC-Graph))
+(: update-record : Record Procedure (Listof Any) → (Pairof SC-Graph (Listof SC-Graph)))
 (define (update-record r f xs)
   (match-define (Record xs₀ Gs₀) r)
-  (define Gs (set-add Gs₀ (make-sc-graph xs₀ xs)))
-  (if (= (set-count Gs₀) (set-count Gs))
-      Gs₀ ; if nothing new, no need to recompute transitive closure and check
-      (let ([Gs* (transitive-closure Gs)])
-        (match (find-sc-violation Gs*)
-          [(? values G-err) (err G-err f xs₀ xs)]
-          [_ Gs*]))))
+  (define G (make-sc-graph xs₀ xs))
+  (match (find-sc-violation G Gs₀)
+    [(? values G-err) (err G-err f xs₀ xs)]
+    [#f (cons G Gs₀)]))
 
 (: err : SC-Graph Procedure (Listof Any) (Listof Any) → Nothing)
 (define (err G f xs₀ xs)

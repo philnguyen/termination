@@ -15,7 +15,7 @@
          "size-change-graph.rkt")
 
 (struct Record ([last-examined-args : (Listof Any)]
-                [sc-graphs : (Setof SC-Graph)])
+                [sc-graphs : (Pairof SC-Graph (Listof SC-Graph))])
   #:transparent)
 
 ;; A Call-Stack maps each function to the prefix that result in it, modulo loops
@@ -48,7 +48,7 @@
           (define r (if (zero? (unsafe-fxand n n₀)) (update-record r₀ f xs) r₀))
           (cons n r)]
          ;; No previous record. This is the 2nd iteration.
-         [_ (cons 1 (Record xs {set (init-sc-graph (length xs))}))])]
+         [_ (cons 1 (Record xs (list (init-sc-graph (length xs)))))])]
       ;; Function is not a loop entry
       [_ #f]))
   ;; Proceed with current function pushed on stack
@@ -59,17 +59,14 @@
 ;; Update function `f`'s call record, accumulating observed ways in which it transitions to itself
 (define (update-record r₀ f xs)
   (match-define (Record xs₀ Gs₀) r₀)
-  (define Gs (set-add Gs₀ (make-sc-graph xs₀ xs)))
-  (if (= (set-count Gs₀) (set-count Gs))
-      (Record xs Gs₀) ; if nothing new, no need to recompute transitive closure and check
-      (let ([Gs* (transitive-closure Gs)])
-        (match (find-sc-violation Gs*)
-          [(? values G-err) (err G-err f xs₀ xs)]
-          [_ (Record xs Gs*)])))) 
+  (define G (make-sc-graph xs₀ xs))
+  (match (find-sc-violation G Gs₀)
+    [(? values G-err) (err G-err f xs₀ xs)]
+    [_ (Record xs (cons G Gs₀))]))
 
 (: err : SC-Graph Procedure (Listof Any) (Listof Any) → Nothing)
 (define (err G f xs₀ xs)
-  (define (graph->lines [Gs : SC-Graph])
+  (define (graph->lines [G : SC-Graph])
     (for/list : (Listof String) ([(edge ↝) (in-hash G)])
       (format "  * ~a ~a ~a" (car edge) ↝ (cdr edge))))
   (define (args->lines [xs : (Listof Any)])

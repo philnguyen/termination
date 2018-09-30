@@ -51,7 +51,6 @@
   
   (define-syntax-class fin
     #:description "recognized terminating functions"
-    ;; FIXME ugly hack
     (pattern p:id #:when (prim? #'p))))
 
 (define-syntax -app

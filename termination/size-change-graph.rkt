@@ -9,7 +9,6 @@
          init-sc-graph
          make-sc-graph
          concat-graph
-         transitive-closure
          find-sc-violation)
 (unsafe-provide with-<?)
 
@@ -43,26 +42,17 @@
                  (λ ([↝₀ : Dec]) (Dec-best ↝₀ ↝₁ ↝₂))
                  (λ () '↧))))
 
-(: transitive-closure : (Setof SC-Graph) → (Setof SC-Graph))
-(define (transitive-closure Gs)
-  (: step : (Setof SC-Graph) → (Setof SC-Graph))
-  (define (step Gs)
-    (set-union Gs
-               (for*/set: : (Setof SC-Graph) ([G₁ : SC-Graph (in-set Gs)]
-                                              [G₂ : SC-Graph (in-set Gs)])
-                 (concat-graph G₁ G₂))))
-  (let fix ([Gs : (Setof SC-Graph) Gs])
-    (define Gs* (step Gs))
-    (if (= (set-count Gs) (set-count Gs*)) Gs (fix Gs*))))
-
-(: find-sc-violation : (Setof SC-Graph) → (Option SC-Graph))
-(define (find-sc-violation Gs)
-  (for/or : (Option SC-Graph) ([G : SC-Graph (in-set Gs)]
-                               #:when (equal? G (concat-graph G G))
-                               #:unless (for/or : Boolean ([(edge dec) (in-hash G)])
-                                          (and (eq? dec '↓)
-                                               (eq? (car edge) (cdr edge)))))
-    G))
+(: find-sc-violation : SC-Graph (Listof SC-Graph) → (Option SC-Graph))
+(define (find-sc-violation G Gs)
+  (define (violating? [G : SC-Graph])
+    (and (equal? G (concat-graph G G))
+         (not (for/or : Boolean ([(edge dec) (in-hash G)])
+                (and (eq? dec '↓)
+                     (eq? (car edge) (cdr edge)))))))
+  (cond
+    [(violating? G) G]
+    [(null? Gs) #f]
+    [else (find-sc-violation (concat-graph (car Gs) G) (cdr Gs))]))
 
 (: make-sc-graph : (Listof Any) (Listof Any) → SC-Graph)
 ;; Make size-change graph from comparing old and new argument lists
