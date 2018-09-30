@@ -48,10 +48,28 @@
       [(cons (app module-path-index-resolve (app resolved-module-path-name name)) _)
        (memq name '(#%kernel #%runtime))]
       [_ #f]))
+
+  (define-syntax-class fin-expr
+    #:description "recognized terminating expressions"
+    (pattern _:number)
+    (pattern _:boolean)
+    (pattern (quote _))
+    (pattern (set! _ _:fin-expr))
+    (pattern (#%app _:fin _:fin-expr ...))
+    (pattern (if _:fin-expr _:fin-expr _:fin-expr))
+    (pattern (let-values ([_ _:fin-expr] ...)
+               _:fin-expr ...))
+    (pattern (letrec-values ([_ _:fin-expr] ...)
+               _:fin-expr ...))
+    (pattern (begin _:fin-expr ...))
+    (pattern (begin0 _:fin-expr ...))
+    (pattern (with-continuation-mark _:fin-expr ...)))
   
   (define-syntax-class fin
     #:description "recognized terminating functions"
-    (pattern p:id #:when (prim? #'p))))
+    (pattern p:id #:when (prim? #'p))
+    (pattern (#%plain-lambda _ _:fin-expr ...))
+    (pattern (case-lambda [_ :fin-expr ...] ...))))
 
 (define-syntax -app
   (syntax-parser
