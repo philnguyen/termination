@@ -51,6 +51,7 @@
 
   (define-syntax-class fin-expr
     #:description "recognized terminating expressions"
+    #:literals (quote set! #%app if let-values letrec-values begin begin0 with-continuation-mark)
     (pattern _:number)
     (pattern _:boolean)
     (pattern (quote _))
@@ -67,6 +68,7 @@
   
   (define-syntax-class fin
     #:description "recognized terminating functions"
+    #:literals (#%plain-lambda case-lambda)
     (pattern p:id #:when (prim? #'p))
     (pattern (#%plain-lambda _ _:fin-expr ...))
     (pattern (case-lambda [_ :fin-expr ...] ...))))
