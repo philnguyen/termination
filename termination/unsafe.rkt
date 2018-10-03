@@ -22,11 +22,13 @@
 
 (begin-for-syntax
 
+  ;; Parameter keeping track of whether there is a pending (non-trivial) application in the same λ-body
   (define app-later? (make-parameter #f))
   (define-syntax-rule (with-acc-app-later? (acc ...) e ...)
     (parameterize ([app-later? (or acc ... (app-later?))])
       e ...))
 
+  ;; Translate module-level-form
   (define on-module-level-form
     (syntax-parser
       #:literals (#%provide begin-for-syntax #%declare module module*
@@ -48,6 +50,7 @@
                                   (on-expr #'expr)))
        expr*]))
 
+  ;; Translate expression
   (define/contract on-expr
     (syntax? . -> . (values boolean? syntax?))
     (syntax-parser
@@ -115,6 +118,7 @@
                               [else (-apply #,f #,@xs)]))))])]
       [e (values #|conservative|# #t #'e)]))
 
+  ;; Translate expression list
   (define/contract on-exprs
     ((listof syntax?) . -> . (values boolean? (listof syntax?)))
     (match-lambda
@@ -130,6 +134,7 @@
                (cons e* es*))]))
 
   (define/contract gen-bindings
+    ;; Generate bindings for complex expressions
     ((listof syntax?) . -> . (values (listof syntax?) (listof (cons/c identifier? syntax?))))
     (match-lambda
       ['() (values '() '())]
@@ -143,6 +148,7 @@
           (values (cons x es*) (cons (cons x e) bnds))])]))
 
   (define/contract with-let
+    ;; Wrap block of code with let-bindings if there are any
     ((listof (cons/c identifier? syntax?)) syntax? . -> . syntax?)
     (match-lambda**
      [('() e) e]
