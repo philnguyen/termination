@@ -4,7 +4,8 @@
  (except-out (all-from-out racket/base) #%module-begin)
  (rename-out [-module-begin #%module-begin])
  define/termination
- begin/termination)
+ begin/termination
+ (rename-out [with-<? with-custom-<]))
 
 (require (for-syntax racket/base
                      racket/syntax
@@ -16,7 +17,7 @@
                      "syntax-utils.rkt")
          (prefix-in r: "runtime-utils.rkt")
          racket/unsafe/ops
-         "apply-with-termination-thread-unsafe.rkt"
+         "unsafe-apply-with-termination.rkt"
          )
 
 (begin-for-syntax
