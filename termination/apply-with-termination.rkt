@@ -61,11 +61,11 @@
   (match-define (Record xs₀ Gs₀) r₀)
   (define G (make-sc-graph xs₀ xs))
   (match (find-sc-violation G Gs₀)
-    [(? values G-err) (err G-err f xs₀ xs)]
+    [(? values G-err) (err G-err G f xs₀ xs)]
     [_ (Record xs (cons G Gs₀))]))
 
-(: err : SC-Graph Procedure (Listof Any) (Listof Any) → Nothing)
-(define (err G f xs₀ xs)
+(: err : SC-Graph SC-Graph Procedure (Listof Any) (Listof Any) → Nothing)
+(define (err G-err G f xs₀ xs)
   (define (graph->lines [G : SC-Graph])
     (for/list : (Listof String) ([(edge ↝) (in-hash G)])
       (format "  * ~a ~a ~a" (car edge) ↝ (cdr edge))))
@@ -87,6 +87,7 @@
     `(,(format "Recursive call to `~a` has no obvious descendence on any argument" f)
       "- Preceding call:"  ,@(args->lines xs₀)
       "- Subsequent call:" ,@(args->lines xs)
-      "Size-change violating graph:" ,@(graph->lines G)
+      "New graph:" ,@(graph->lines G)
+      "Size-change violating graph:" ,@(graph->lines G-err)
       "Call stack:" ,@(stack->lines)))
   (error 'possible-non-termination (string-join lines "\n")))
