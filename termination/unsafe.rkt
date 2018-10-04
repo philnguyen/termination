@@ -28,6 +28,9 @@
     (parameterize ([app-later? (or acc ... (app-later?))])
       e ...))
 
+  (define orig-insp (variable-reference->module-declaration-inspector
+                     (#%variable-reference)))
+
   ;; Translate module-level-form
   (define on-module-level-form
     (syntax-parser
@@ -51,78 +54,87 @@
        expr*]))
 
   ;; Translate expression
-  (define/contract on-expr
+  (define/contract (on-expr stx)
     (syntax? . -> . (values boolean? syntax?))
-    (syntax-parser
-      #:literals (#%plain-lambda case-lambda if begin begin0 let-values letrec-values
-                  set! quote quote-syntax with-continuation-mark #%plain-app #%top #%variable-reference)
-      [(#%plain-lambda fmls body ...)
-       (define-values (_ body*)
-         (parameterize ([app-later? #f])
-           (on-exprs (syntax->list #'(body ...)))))
-       (values #f #`(#%plain-lambda fmls #,@body*))]
-      [(case-lambda (fmls body ...) ...)
-       (with-syntax ([((body* ...) ...)
-                      (for/list ([clause-body (syntax->list #'((body ...) ...))])
-                        (define-values (_ clause-body*) (on-exprs (syntax->list clause-body)))
-                        clause-body*)])
-         (values #f #'(case-lambda (fmls body* ...) ...)))]
-      [(if cnd thn els)
-       (define-values (thn-has-app? thn*) (on-expr #'thn))
-       (define-values (els-has-app? els*) (on-expr #'els))
-       (define-values (cnd-has-app? cnd*)
-         (with-acc-app-later? (thn-has-app? els-has-app?)
-           (on-expr #'cnd)))
-       (values (or cnd-has-app? thn-has-app? els-has-app?)
-               #`(if #,cnd* #,thn* #,els*))]
-      [((~and seq (~or begin begin0)) body ...)
-       (define-values (app? body*) (on-exprs (syntax->list #'(body ...))))
-       (values app? #`(seq #,@body*))]
-      [((~and let (~or let-values letrec-values))
-        ([lhs rhs] ...) body ...)
-       (define-values (body-has-app? body*) (on-exprs (syntax->list #'(body ...))))
-       (define-values (rhs-has-app? rhs*)
-         (with-acc-app-later? (body-has-app?)
-           (on-exprs (syntax->list #'(rhs ...)))))
-       (with-syntax ([(rhs* ...) rhs*]
-                     [(body* ...) body*])
-         (values (or rhs-has-app? body-has-app?)
-                 #'(let ([lhs rhs*] ...) body* ...)))]
-      [(set! x e)
-       (define-values (app? e*) (on-expr #'e))
-       (values app? #`(set! x #,e*))]
-      [(with-continuation-mark k v b)
-       (match-define-values (app? (list k* v* b*))
-                            (on-exprs (list #'k #'v #'b)))
-       (values app? #`(with-continuation-mark #,k* #,v* #,b*))]
-      [(~and e (~or _:id
-                    (quote _)
-                    (quote-syntax _)
-                    (#%top _)
-                    (#%variable-reference _ ...)))
-       (values #f #'e)]
-      [(#%plain-app fun arg ...)
-       (match-define-values (app? (cons fun* arg*))
-                            (on-exprs (syntax->list #'(fun arg ...))))
-       (syntax-parse fun*
-         [(~or _:fin (~literal terminating-function)) (values app? #`(#%plain-app #,fun* #,@arg*))]
-         [_
-          (match-define-values ((cons f xs) bnds) (gen-bindings (cons fun* arg*)))
-          (with-syntax ([-apply (if (or app? (app-later?)) #'apply/guard/restore #'apply/guard)])
-            (values #t
-                    (with-let bnds
-                      #`(cond [(r:terminating-function? #,f)
-                               (-apply (unsafe-struct-ref #,f 0) #,@xs)]
-                              [(divergence-ok?)
-                               (#,f #,@xs)]
-                              [else (-apply #,f #,@xs)]))))])]
-      [e (values #|conservative|# #t #'e)]))
+    (define (rearm new-stx) (syntax-rearm new-stx stx))
+    (define-values (stx-has-app? stx*)
+      (syntax-parse (syntax-disarm stx orig-insp)
+        #:literals (#%plain-lambda case-lambda if begin begin0 let-values letrec-values
+                    set! quote quote-syntax with-continuation-mark #%plain-app
+                    #%top #%variable-reference)
+        [(~and orig (#%plain-lambda fmls body ...))
+         (define-values (_ body*)
+           (parameterize ([app-later? #f])
+             (on-exprs (syntax->list #'(body ...))))) 
+         (values #f (with-syntax-source #'orig #`(#%plain-lambda fmls #,@body*)))]
+        [(case-lambda (fmls body ...) ...)
+         (with-syntax ([((body* ...) ...)
+                        (parameterize ([app-later? #f])
+                          (for/list ([clause-body (syntax->list #'((body ...) ...))])
+                            (define-values (_ clause-body*)
+                              (on-exprs (syntax->list clause-body)))
+                            clause-body*))])
+           (values #f #'(case-lambda (fmls body* ...) ...)))]
+        [(if cnd thn els)
+         (define-values (thn-has-app? thn*) (on-expr #'thn))
+         (define-values (els-has-app? els*) (on-expr #'els))
+         (define-values (cnd-has-app? cnd*)
+           (with-acc-app-later? (thn-has-app? els-has-app?)
+             (on-expr #'cnd)))
+         (values (or cnd-has-app? thn-has-app? els-has-app?)
+                 #`(if #,cnd* #,thn* #,els*))]
+        [((~and seq (~or begin begin0)) body ...)
+         (define-values (app? body*) (on-exprs (syntax->list #'(body ...))))
+         (values app? #`(seq #,@body*))]
+        [((~and let (~or let-values letrec-values))
+          ([lhs rhs] ...) body ...)
+         (define-values (body-has-app? body*) (on-exprs (syntax->list #'(body ...))))
+         (define-values (rhs-has-app? rhs*)
+           (with-acc-app-later? (body-has-app?)
+             (on-exprs (syntax->list #'(rhs ...)))))
+         (with-syntax ([(rhs* ...) rhs*]
+                       [(body* ...) body*])
+           (values (or rhs-has-app? body-has-app?)
+                   #'(let ([lhs rhs*] ...) body* ...)))]
+        [(set! x e)
+         (define-values (app? e*) (on-expr #'e))
+         (values app? #`(set! x #,e*))]
+        [(with-continuation-mark k v b)
+         (match-define-values (app? (list k* v* b*))
+                              (on-exprs (list #'k #'v #'b)))
+         (values app? #`(with-continuation-mark #,k* #,v* #,b*))]
+        [(~and e (~or _:id
+                      (quote _)
+                      (quote-syntax _)
+                      (#%top _)
+                      (#%variable-reference _ ...)))
+         (values #f #'e)]
+        [(#%plain-app fun arg ...)
+         (syntax-parse #'fun
+           [(~or _:fin (~literal terminating-function))
+            (match-define-values (app? fun-arg) (on-exprs (syntax->list #'(fun arg ...))))
+            (values app? #`(#%plain-app #,@fun-arg))]
+           [_
+            (match-define-values (app? fun-arg)
+                                 (parameterize ([app-later? #t])
+                                   (on-exprs (syntax->list #'(fun arg ...)))))
+            (match-define-values ((cons f xs) bnds) (gen-bindings fun-arg))
+            (with-syntax ([-apply (if #t #;(app-later?) #'apply/guard/restore #'apply/guard)])
+              (values #t
+                      (with-let bnds
+                        #`(cond [(r:terminating-function? #,f)
+                                 (-apply (unsafe-struct-ref #,f 0) #,@xs)]
+                                [(divergence-ok?)
+                                 (#,f #,@xs)]
+                                [else (-apply #,f #,@xs)]))))])]
+        [e (values #|conservative|# #t #'e)]))
+    (values stx-has-app? (rearm stx*)))
 
   ;; Translate expression list
   (define/contract on-exprs
     ((listof syntax?) . -> . (values boolean? (listof syntax?)))
     (match-lambda
-      ['() (values (app-later?) '())]
+      ['() (values #f '())]
       [(list e) (define-values (app? e*) (on-expr e))
                 (values app? (list e*))]
       [(cons e es)
@@ -158,12 +170,13 @@
           (values (car bnd) (cdr bnd))))
       (with-syntax ([(lhs ...) lhs]
                     [(rhs ...) rhs])
-        #`(let ([lhs rhs] ...) #,e))]))
+        #`(let ([lhs rhs] ...) #,e))])) 
   )
+
 
 (define-syntax -module-begin
   (syntax-parser
-    [(_ form ...)
+    [(~and orig (_ form ...))
      (syntax-parse (local-expand #'(#%plain-module-begin form ...) 'module-begin '())
        #:literals (#%plain-module-begin)
        [(#%plain-module-begin form ...)
@@ -176,8 +189,11 @@
      (with-syntax ([f* (with-syntax-source #'lhs #'(λ (x ...) e ...))])
        #'(define f (terminating-function f*)))]))
 
-(define-syntax-rule (begin/termination e ...)
-  ((terminating-function (lambda () e ...))))
+(define-syntax begin/termination
+  (syntax-parser
+    [(~and stx (_ e ...))
+     (with-syntax ([f (with-syntax-source #'stx #'(λ () e ...))])
+       #'((terminating-function f)))]))
 
 ;; Define alias just so it can match in `syntax-parse`
 (define terminating-function r:terminating-function)

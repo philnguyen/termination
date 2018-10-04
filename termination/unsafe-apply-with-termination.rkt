@@ -20,6 +20,7 @@
   #:transparent)
 
 ;; hack just to see limit
+(require racket/pretty)
 (define-syntax dynamic-wind
   (syntax-rules (λ)
     [(_ (λ () e₁ ...) exec (λ () e₂ ...))
@@ -71,13 +72,11 @@
         (set-mcar! rec n₀)
         (set-Record-last-examined-args! r xs₀)
         (set-Record-last-sc-graph! r Gs₀))))
-
   (cond
     ;; `f` detected as loop entry
     [(hash-ref call-stack f #f)
      =>
      (λ (rec)
-       (printf "applying ~a to ~a: ~a~n" f xs rec)
        (if (mpair? rec)
            ;; `f` loops back second time onwards
            (let* ([n₀ (mcar rec)]
@@ -89,7 +88,7 @@
            ;; `f` loops back first time
            (exec/mark-first-loop)))]
     ;; `f` is seen first time in this call chain
-    [else (printf "applying ~a to ~a: unseen~n" f xs) (exec/mark-seen)]))
+    [else (exec/mark-seen)]))
 
 (: apply/guard : (∀ (X Y) (X * → Y) X * → Y))
 ;; FIXME: Shameless duplicate of `apply/guard/restore`
@@ -97,11 +96,8 @@
   (define (exec) (apply f xs))
 
   (define (exec/mark-seen)
-    (dynamic-wind
-      (λ () (hash-set! call-stack f #t))
-      exec
-      ;; Always clean up after loop to avoid excessive leaks
-      (λ () (hash-remove! call-stack f))))
+    (hash-set! call-stack f #t)
+    (exec))
 
   (define (exec/mark-first-loop)
     (hash-set! call-stack f ((inst mcons Positive-Integer Record) 1 (Record xs (list (init-sc-graph (length xs))))))
@@ -115,20 +111,11 @@
   (: exec/bump-loop-count-and-check : (MPairof Positive-Integer Record) Positive-Integer → Y)
   (define (exec/bump-loop-count-and-check rec n)
     (define r (mcdr rec))
-    (define xs₀ (Record-last-examined-args r))
-    (define Gs₀ (Record-last-sc-graph r))
-    (dynamic-wind
-      (λ ()
-        (define Gs (update-record r f xs))
-        (set-mcar! rec n)
-        (set-Record-last-examined-args! r xs)
-        (set-Record-last-sc-graph! r Gs))
-      exec
-      ;; Clean up after to avoid excessive leaks
-      (λ ()
-        (set-mcar! rec (assert (sub1 n) positive?))
-        (set-Record-last-examined-args! r xs₀)
-        (set-Record-last-sc-graph! r Gs₀))))
+    (define Gs (update-record r f xs))
+    (set-mcar! rec n)
+    (set-Record-last-examined-args! r xs)
+    (set-Record-last-sc-graph! r Gs)
+    (exec))
 
   (cond
     ;; `f` detected as loop entry
