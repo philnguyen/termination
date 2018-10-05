@@ -35,24 +35,26 @@
 ;; Mark size-change progress before executing the body
 (define (apply/termination f . xs)
   (define cs (call-stack))
-  (define rec*
+  (define-values (cs* rec*)
     (match (hash-ref cs f #f)
       ;; Function has previous been on the call stack. It's a loop entry
       [(cons cs₀ ?rec₀)
-       (match ?rec₀
-         ;; At the `n₀`th iteration with previous record `r₀`
-         [(cons n₀ r₀)
-          (define n (add1 n₀))
-          ;; If the `n`th iteration is a power of 2, guard against size-change violation
-          ;; otherwise use old record
-          (define r (if (zero? (unsafe-fxand n n₀)) (update-record r₀ f xs) r₀))
-          (cons n r)]
-         ;; No previous record. This is the 2nd iteration.
-         [_ (cons 1 (Record xs (list (init-sc-graph (length xs)))))])]
+       (values
+        cs₀
+        (match ?rec₀
+          ;; At the `n₀`th iteration with previous record `r₀`
+          [(cons n₀ r₀)
+           (define n (add1 n₀))
+           ;; If the `n`th iteration is a power of 2, guard against size-change violation
+           ;; otherwise use old record
+           (define r (if (zero? (unsafe-fxand n n₀)) (update-record r₀ f xs) r₀))
+           (cons n r)]
+          ;; No previous record. This is the 2nd iteration.
+          [_ (cons 1 (Record xs (list (init-sc-graph (length xs)))))]))]
       ;; Function is not a loop entry
-      [_ #f]))
+      [_ (values cs #f)]))
   ;; Proceed with current function pushed on stack
-  (with-call-stack (hash-set cs f (cons cs rec*))
+  (with-call-stack (hash-set cs* f (cons cs* rec*))
     (apply f xs)))
 
 (: update-record : Record Procedure (Listof Any) → Record)
