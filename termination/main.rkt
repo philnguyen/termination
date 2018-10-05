@@ -24,8 +24,11 @@
      (with-syntax ([gen-lam (with-syntax-source #'lhs #'(λ (x ...) e ...))])
        #'(define f (terminating-function gen-lam)))]))
 
-(define-syntax-rule (begin/termination e ...)
-  (-app (terminating-function (λ () e ...))))
+(define-syntax begin/termination
+  (syntax-parser
+    [(~and stx (_ e ...))
+     (with-syntax ([gen-lam (with-syntax-source #'stx #'(λ () e ...))])
+       #'(-app (terminating-function gen-lam)))]))
 
 (define-syntax -app
   (syntax-parser
