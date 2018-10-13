@@ -7,7 +7,11 @@
                "rackunit-lib"
                "base"
                "typed-racket-lib"
-               "typed-racket-more"))
+               "typed-racket-more"
+               "bnf"
+               "set-extras"
+               "unreachable"
+               "traces"))
 
 (define pkg-desc "Modified Racket that supports dynamic enforcement of termination")
 

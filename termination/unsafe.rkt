@@ -3,18 +3,22 @@
 (provide
  (except-out (all-from-out racket/base) #%module-begin)
  (rename-out [-module-begin #%module-begin])
+ (rename-out [r:terminating-function/c terminating-function/c])
  define/termination
  begin/termination
  (rename-out [with-<? with-custom-<]))
 
 (require (for-syntax racket/base
+                     racket/set
                      racket/syntax
                      syntax/parse
                      racket/match
                      racket/contract
                      racket/pretty
                      racket/splicing
-                     "syntax-utils.rkt")
+                     "syntax-utils.rkt"
+                     "flow-analysis/main.rkt"
+                     "flow-analysis/parse.rkt")
          (prefix-in r: "runtime-utils.rkt")
          racket/unsafe/ops
          "unsafe-apply-with-termination.rkt"
@@ -23,10 +27,13 @@
 (begin-for-syntax
 
   ;; Parameter keeping track of whether there is a pending (non-trivial) application in the same λ-body
-  (define app-later? (make-parameter #f))
+  (define app-later? (make-parameter #t))
   (define-syntax-rule (with-acc-app-later? (acc ...) e ...)
     (parameterize ([app-later? (or acc ... (app-later?))])
       e ...))
+
+  (define loop-entries (make-parameter #f))
+  (define app-tags (make-parameter #f))
 
   (define orig-insp (variable-reference->module-declaration-inspector
                      (#%variable-reference)))
@@ -45,12 +52,16 @@
                       (#%require _ ...)))
        #'stx]
       [(define-values lhs rhs)
-       (define-values (_ rhs*) (with-acc-app-later? (#t)
-                                 (on-expr #'rhs)))
+       (define-values (_ rhs*) (on-expr #'rhs))
+       #;(begin
+         (printf "original:~n")
+         (pretty-print (syntax->datum #'(define-values lhs rhs)))
+         (printf "expanded:~n")
+         (pretty-print (syntax->datum #`(define-values lhs #,rhs*)))
+         (printf "~n"))
        #`(define-values lhs #,rhs*)]
       [expr
-       (define-values (_ expr*) (with-acc-app-later? (#t)
-                                  (on-expr #'expr)))
+       (define-values (_ expr*) (on-expr #'expr))
        expr*]))
 
   ;; Translate expression
@@ -109,24 +120,49 @@
                       (#%top _)
                       (#%variable-reference _ ...)))
          (values #f #'e)]
-        [(#%plain-app fun arg ...)
+        [(~and app (#%plain-app fun arg ...))
          (syntax-parse #'fun
+           ;; TODO: flow analysis result will eventually subsume this
+           ;; Right now it subsumes `:fin` but not macro-generated applications
            [(~or _:fin (~literal terminating-function))
             (match-define-values (app? fun-arg) (on-exprs (syntax->list #'(fun arg ...))))
             (values app? #`(#%plain-app #,@fun-arg))]
+           ;; When function can only be wrapped in (term/c _)
            [_
+            #:when (equal? (hash-ref (app-tags) (syntax-loc #'app)) {set 'term/c})
+            (match-define-values (app? (cons f xs))
+                                 (parameterize ([app-later? #t])
+                                   (on-exprs (syntax->list #'(fun arg ...)))))
+            (with-syntax ([-apply (if (app-later?) #'apply/guard/restore #'apply/guard)])
+              (values #t #`(-apply (unsafe-struct-ref #,f 0) #,@xs)))]
+           ;; When function can be loop entry
+           [_
+            #:when (set-member? (loop-entries) (syntax-loc #'app))
             (match-define-values (app? fun-arg)
                                  (parameterize ([app-later? #t])
                                    (on-exprs (syntax->list #'(fun arg ...)))))
             (match-define-values ((cons f xs) bnds) (gen-bindings fun-arg))
-            (with-syntax ([-apply (if #t #;(app-later?) #'apply/guard/restore #'apply/guard)])
+            (with-syntax ([-apply (if (app-later?) #'apply/guard/restore #'apply/guard)])
               (values #t
                       (with-let bnds
-                        #`(cond [(r:terminating-function? #,f)
-                                 (-apply (unsafe-struct-ref #,f 0) #,@xs)]
-                                [(divergence-ok?)
-                                 (#,f #,@xs)]
-                                [else (-apply #,f #,@xs)]))))])]
+                        (let ([tags (hash-ref (app-tags) (syntax-loc #'app))])
+                          ;; Reduce tests depending on function tag
+                          (cond
+                            [(equal? tags {set 'term/c})
+                             #`(-apply (unsafe-struct-ref #,f 0) #,@xs)]
+                            [(not (set-member? tags 'term/c))
+                             #`(if (divergence-ok?)
+                                   (#,f #,@xs)
+                                   (-apply #,f #,@xs))]
+                            [else
+                             #`(cond [(r:terminating-function? #,f)
+                                      (-apply (unsafe-struct-ref #,f 0) #,@xs)]
+                                     [(divergence-ok?)
+                                      (#,f #,@xs)]
+                                     [else (-apply #,f #,@xs)])])))))]
+           [_
+            (define-values (app? fun-arg) (on-exprs (syntax->list #'(fun arg ...))))
+            (values app? #`(#%plain-app #,@fun-arg))])]
         [e (values #|conservative|# #t #'e)]))
     (values stx-has-app? (rearm stx*)))
 
@@ -176,23 +212,41 @@
 
 (define-syntax -module-begin
   (syntax-parser
-    [(~and orig (_ form ...))
+    [(~and orig (_ form ...)) 
      (syntax-parse (local-expand #'(#%plain-module-begin form ...) 'module-begin '())
        #:literals (#%plain-module-begin)
-       [(#%plain-module-begin form ...)
-        (with-syntax ([(form* ...) (map on-module-level-form (syntax->list #'(form ...)))])
+       [(~and stx (#%plain-module-begin form ...))
+        #;(begin
+          (printf "unparsed:~n")
+          (pretty-print (syntax->datum #'stx))
+          (define ans (parse-module #'stx))
+          (printf "parsed module:~n")
+          (pretty-print ans))
+        (define-values (flows loops) (do-analyze #'stx))
+        (with-syntax ([(form* ...)
+                       (parameterize ([loop-entries loops]
+                                      [app-tags flows])
+                         #;(printf "~a loop entries: ~a~n" (set-count loops) loops)
+                         #;(printf "flows:~n")
+                         #;(for ([(k v) (in-hash flows)])
+                           (printf "- ~a ← ~a~n" k v))
+                         (map on-module-level-form (syntax->list #'(form ...))))])
+          #;(printf "final program:~n")
+          #;(pretty-print (syntax->datum #'(#%plain-module-begin form* ...)))
           #'(#%plain-module-begin form* ...))])]))
 
 (define-syntax define/termination
   (syntax-parser
-    [(_ (~and lhs (f x ...)) e ...)
-     (with-syntax ([f* (with-syntax-source #'lhs #'(λ (x ...) e ...))])
-       #'(define f (terminating-function f*)))]))
+    [(~and stx (_ (~and lhs (f x ...)) e ...))
+     (with-syntax* ([f* (with-syntax-source #'lhs #'(λ (x ...) e ...))]
+                    [app (with-syntax-source #'stx #'(terminating-function f*))])
+       #'(define f app))]))
 
 (define-syntax begin/termination
   (syntax-parser
     [(~and stx (_ e ...))
      (with-syntax ([f (with-syntax-source #'stx #'(λ () e ...))])
+       ;; TODO: how to assign source locations for these 2 applications?
        #'((terminating-function f)))]))
 
 ;; Define alias just so it can match in `syntax-parse`
