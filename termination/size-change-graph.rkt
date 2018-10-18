@@ -6,7 +6,6 @@
          "flattened-parameter.rkt")
 
 (provide SC-Graph
-         init-sc-graph
          make-sc-graph
          concat-graph
          find-sc-violation)
@@ -21,15 +20,6 @@
 ;; - '↧` is definite non-ascendence
 ;; - `#f` is conservative "don't know"
 (define-type Dec (U '↓ '↧))
-
-(: init-sc-graph : Index → SC-Graph)
-;; Initial size-change graph, where each argument have not ascended from any value
-(define init-sc-graph
-  (let ([cache : (Mutable-HashTable Index SC-Graph) (make-hasheq)])
-    (λ (n)
-      (hash-ref! cache n
-                 (λ () (for/hash : SC-Graph ([i (in-range n)])
-                         (values (cons i i) '↓)))))))
 
 (: concat-graph : SC-Graph SC-Graph → SC-Graph)
 (define (concat-graph G₁ G₂)

@@ -15,7 +15,7 @@
          "size-change-graph.rkt")
 
 (struct Record ([last-examined-args : (Listof Any)]
-                [last-sc-graph : (Pairof SC-Graph (Listof SC-Graph))])
+                [last-sc-graph : (Listof SC-Graph)])
   #:mutable
   #:transparent)
 
@@ -40,6 +40,7 @@
   (begin
     (: app (∀ (X Y) (X * → Y) X * → Y))
     (define (app f . xs)
+      (max-stack)
       (define (exec) (apply f xs))
 
       (define (exec/mark-seen)
@@ -50,7 +51,7 @@
 
       (define (exec/mark-first-loop)
         (wrapper
-          (λ () (hash-set! call-stack f ((inst mcons Positive-Integer Record) 1 (Record xs (list (init-sc-graph (length xs)))))))
+          (λ () (hash-set! call-stack f ((inst mcons Positive-Integer Record) 1 (Record xs '()))))
           exec
           (λ () (hash-set! call-stack f #t))))
 

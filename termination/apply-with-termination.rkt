@@ -15,7 +15,7 @@
          "size-change-graph.rkt")
 
 (struct Record ([last-examined-args : (Listof Any)]
-                [sc-graphs : (Pairof SC-Graph (Listof SC-Graph))])
+                [sc-graphs : (Listof SC-Graph)])
   #:transparent)
 
 ;; A Call-Stack maps each function to the prefix that result in it, modulo loops
@@ -50,7 +50,7 @@
            (define r (if (zero? (unsafe-fxand n n₀)) (update-record r₀ f xs) r₀))
            (cons n r)]
           ;; No previous record. This is the 2nd iteration.
-          [_ (cons 1 (Record xs (list (init-sc-graph (length xs)))))]))]
+          [_ (cons 1 (Record xs '()))]))]
       ;; Function is not a loop entry
       [_ (values cs #f)]))
   ;; Proceed with current function pushed on stack
