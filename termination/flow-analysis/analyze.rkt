@@ -42,6 +42,16 @@
   ;; - Where normal people use reader monad, it uses dynamic parameters
   ;; - Where normal people use state monad, it uses `set!` (`$ₒᵤₜ`, `Σ`, `G`)
 
+  (: with-cache : (E → R) → E → R)
+  (define ((with-cache step) E)
+    (cond
+      [(hash-ref $ₒᵤₜ E #f) => values]
+      [else
+       (set! $ₒᵤₜ (hash-set $ₒᵤₜ E (cache-ref $ᵢₙ E)))
+       (define Rₐ (step E))
+       (set! $ₒᵤₜ ($⊔ E Rₐ $ₒᵤₜ))
+       Rₐ]))
+
   (: ev-D! : D → Boolean)
   ;; Evaluate module-level form, returns `#t` if plausibly succeeds
   (define ev-D!
@@ -57,55 +67,49 @@
 
   (: ev-E! : E → R)
   ;; Evaluate expression
-  (define (ev-E! E₀)
-    (cond
-      [(hash-ref $ₒᵤₜ E₀ #f) => values]
-      [else
-       (set! $ₒᵤₜ (hash-set $ₒᵤₜ E₀ (cache-ref $ᵢₙ E₀))) 
-       (define Rₐ
-         (match E₀
-           [(or (? Lam?) (? Case-Lam?) (? Prim?) (? Base?))
-            {set (list {set E₀})}]
-           [(or (? Top-Ref?) (? Lex-Ref?))
-            {set (list (hash-ref Σ E₀))}]
-           [(If Eᵢ Eₜ Eₑ)
-            (define-values (tt? ff?) (check-plausible (ev-E! Eᵢ)))
-            (∪ (if tt? (ev-E! Eₜ) ∅)
-               (if ff? (ev-E! Eₑ) ∅))]
-           [(Begin Es)
-            (match (ev-E!* Es)
-              [#f ∅]
-              ['() -Void]
-              [(? pair? Ws) (last Ws)])]
-           [(Begin0 E₀ E)
-            (define W₀ (ev-E! E₀))
-            (cond [(set-empty? W₀)       ∅]
-                  [(set-empty? (ev-E! E)) ∅]
-                  [else                  W₀])]
-           ;; With mono-variant, `let` and `letrec` are similar
-           [(or (Let Bnds E) (Letrec Bnds E))
-            #:when (and Bnds E)
-            (if (andmap ev-Bnd! Bnds)
-                (ev-E! E)
-                ∅)]
-           [(Set! X E*)
-            (match (filter-arity (ev-E! E*) 1)
-              [(? set-empty?) ∅]
-              [W (for ([V-list (in-set W)])
-                   (set! Σ (⊔ X (car V-list) Σ)))
-                 -Void])]
-           [(Wcm Eₖ Eᵥ E)
-            (ev-E! Eₖ)
-            (ev-E! Eᵥ)
-            ;; relies on continuation-mark-get being opaque
-            (ev-E! E)]
-           [(App Eₕ Eₓs L)
-            (match (ev-E!* (cons Eₕ Eₓs))
-              [(? values (app (λ (Ws) (guard-arity Ws 1)) (cons Vₕ^ Wₓ)))
-               (for/R ([Vₕ (in-set Vₕ^)]) (app! Vₕ Wₓ L))]
-              [#f ∅])]))
-       (set! $ₒᵤₜ ($⊔ E₀ Rₐ $ₒᵤₜ))
-       Rₐ]))
+  (define ev-E!
+    (with-cache
+      (match-lambda
+        [(and E (or (? Lam?) (? Case-Lam?) (? Prim?) (? Base?) (? Opq?)))
+         {set (list {set E})}]
+        [(and E (or (? Top-Ref?) (? Lex-Ref?)))
+         {set (list (hash-ref Σ E))}]
+        [(If Eᵢ Eₜ Eₑ)
+         (define-values (tt? ff?) (check-plausible (ev-E! Eᵢ)))
+         (∪ (if tt? (ev-E! Eₜ) ∅)
+            (if ff? (ev-E! Eₑ) ∅))]
+        [(Begin Es)
+         (match (ev-E!* Es)
+           [#f ∅]
+           ['() -Void]
+           [(? pair? Ws) (last Ws)])]
+        [(Begin0 E₀ E)
+         (define W₀ (ev-E! E₀))
+         (cond [(set-empty? W₀)       ∅]
+               [(set-empty? (ev-E! E)) ∅]
+               [else                  W₀])]
+        ;; With mono-variant, `let` and `letrec` are similar
+        [(or (Let Bnds E) (Letrec Bnds E))
+         #:when (and Bnds E)
+         (if (andmap ev-Bnd! Bnds)
+             (ev-E! E)
+             ∅)]
+        [(Set! X E*)
+         (match (filter-arity (ev-E! E*) 1)
+           [(? set-empty?) ∅]
+           [W (for ([V-list (in-set W)])
+                (set! Σ (⊔ X (car V-list) Σ)))
+              -Void])]
+        [(Wcm Eₖ Eᵥ E)
+         (ev-E! Eₖ)
+         (ev-E! Eᵥ)
+         ;; relies on continuation-mark-get being opaque
+         (ev-E! E)]
+        [(App Eₕ Eₓs L)
+         (match (ev-E!* (cons Eₕ Eₓs))
+           [(? values (app (λ (Ws) (guard-arity Ws 1)) (cons Vₕ^ Wₓ)))
+            (for/R ([Vₕ (in-set Vₕ^)]) (app! Vₕ Wₓ L))]
+           [#f ∅])])))
 
   (: ev-Bnd! : Bnd → Boolean)
   ;; Evaluate binding, returns `#t` if plausibly succeeds
@@ -284,7 +288,10 @@
 
 (: filter-arity : (℘ W) Integer → (℘ W))
 (define (filter-arity Ws k)
-  (for/set: : (℘ W) ([W (in-set Ws)] #:when (= k (length W)))
+  (for/set: : (℘ W) ([W (in-set Ws)]
+                     #:when (or (= k (length W))
+                                ;; HACK
+                                (equal? W (list {set (Opq)}))))
     W))
 
 (: guard-arity : (Listof (℘ W)) Integer → (Option W))
@@ -304,7 +311,11 @@
   (match (filter-arity Ws (length As))
     [(? set-empty?) #f]
     [Ws (for/fold ([Σ : Σ Σ₀]) ([W (in-set Ws)])
-          (foldl ⊔ Σ As W))]))
+          ;; HACK
+          (define W* (if (equal? W (list {set (Opq)}))
+                         (make-list (length As) {set (Opq)})
+                         W))
+          (foldl ⊔ Σ As W*))]))
 
 (: Fmls-arity : Fmls → (U Natural arity-at-least))
 (define (Fmls-arity fmls)
@@ -365,7 +376,7 @@
                        #:when (for/or : Boolean ([V (in-set Vs)])
                                 (loop-entry? V)))
       L))
-  
+
   (values app-tags loop-entry-apps))
 
 (define -Void {set (list {set (Base (void))})})
