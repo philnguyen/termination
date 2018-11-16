@@ -5,7 +5,8 @@
 (unsafe-provide apply/guard/restore
                 apply/guard
                 divergence-ok?
-                with-<?)
+                with-<?
+                unsafe-clear!)
 
 (require racket/match
          racket/list
@@ -18,6 +19,14 @@
                 [last-sc-graph : (Listof SC-Graph)])
   #:mutable
   #:transparent)
+
+(define hash-procedure! : (Procedure → Integer)
+  (let ([procedure-hashes : (HashTable Procedure Integer) (make-hasheq)]
+        [next-id : Integer 0]
+        [MAX-PROCEDURE-COUNT 1024])
+    (λ (f)
+      (hash-ref! procedure-hashes f
+                 (λ () (begin0 next-id (set! next-id (modulo (+ 1 next-id) MAX-PROCEDURE-COUNT))))))))
 
 (define-syntax with-pre-and-post
   (syntax-rules (λ)
@@ -32,28 +41,30 @@
 (define-syntax-rule (with-pre pre exec _)
   (begin (pre) (exec)))
 
-(define call-stack ((inst make-hasheq Procedure (U #t (MPairof Positive-Integer Record)))))
+(define call-stack ((inst make-hasheq Integer (U #t (MPairof Positive-Integer Record)))))
 
 (define (divergence-ok?) (hash-empty? call-stack))
+
+(define (unsafe-clear!)
+  (hash-clear! call-stack))
 
 (define-syntax-rule (define-apply app wrapper)
   (begin
     (: app (∀ (X Y) (X * → Y) X * → Y))
     (define (app f . xs)
-      (max-stack)
       (define (exec) (apply f xs))
-
+      (define f:hash (hash-procedure! f))
       (define (exec/mark-seen)
         (wrapper
-          (λ () (hash-set! call-stack f #t))
+          (λ () (hash-set! call-stack f:hash #t))
           exec
-          (λ () (hash-remove! call-stack f))))
+          (λ () (hash-remove! call-stack f:hash))))
 
       (define (exec/mark-first-loop)
         (wrapper
-          (λ () (hash-set! call-stack f ((inst mcons Positive-Integer Record) 1 (Record xs '()))))
+          (λ () (hash-set! call-stack f:hash ((inst mcons Positive-Integer Record) 1 (Record xs '()))))
           exec
-          (λ () (hash-set! call-stack f #t))))
+          (λ () (hash-set! call-stack f:hash #t))))
 
       (: exec/bump-loop-count : (MPairof Positive-Integer Record) Positive-Integer Positive-Integer → Y)
       (define (exec/bump-loop-count rec n₀ n)
@@ -69,7 +80,7 @@
         (define Gs₀ (Record-last-sc-graph r))
         (wrapper
          (λ ()
-           (define Gs (update-record r f xs))
+           (define Gs (update-record r f:hash xs))
            (set-mcar! rec n)
            (set-Record-last-examined-args! r xs)
            (set-Record-last-sc-graph! r Gs))
@@ -80,7 +91,7 @@
            (set-Record-last-sc-graph! r Gs₀))))
       (cond
         ;; `f` detected as loop entry
-        [(hash-ref call-stack f #f)
+        [(hash-ref call-stack f:hash #f)
          =>
          (λ (rec)
            (if (mpair? rec)
@@ -99,16 +110,16 @@
 (define-apply apply/guard/restore with-pre-and-post)
 (define-apply apply/guard with-pre)
 
-(: update-record : Record Procedure (Listof Any) → (Pairof SC-Graph (Listof SC-Graph)))
-(define (update-record r f xs)
+(: update-record : Record Integer (Listof Any) → (Pairof SC-Graph (Listof SC-Graph)))
+(define (update-record r f:hash xs)
   (match-define (Record xs₀ Gs₀) r)
   (define G (make-sc-graph xs₀ xs))
   (match (find-sc-violation G Gs₀)
-    [(? values G-err) (err G-err f xs₀ xs)]
+    [(? values G-err) (err G-err f:hash xs₀ xs)]
     [#f (cons G Gs₀)]))
 
-(: err : SC-Graph Procedure (Listof Any) (Listof Any) → Nothing)
-(define (err G f xs₀ xs)
+(: err : SC-Graph Integer (Listof Any) (Listof Any) → Nothing)
+(define (err G f:hash xs₀ xs)
   (define (graph->lines [G : SC-Graph])
     (for/list : (Listof String) ([(edge ↝) (in-hash G)])
       (format "  * ~a ~a ~a" (car edge) ↝ (cdr edge))))
@@ -116,7 +127,7 @@
     (for/list : (Listof String) ([(x i) (in-indexed xs)])
       (format "  * arg ~a: ~a" i x)))
   (define lines
-    `(,(format "Recursive call to `~a` has no obvious descent on any argument" f)
+    `(,(format "Recursive call to `~a` has no obvious descent on any argument" f:hash)
       "- Preceding call:" ,@(args->lines xs₀)
       "- Subsequent call:" ,@(args->lines xs)
       "Size-change violating graph:" ,@(graph->lines G)))
