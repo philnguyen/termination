@@ -67,18 +67,12 @@
 ;; Simple default implementation of well-founded strict partial order on data
 (define (<?:default x y)
   (define (≤? x y) (or (equal? x y) (<?:default x y)))
-  
-  (cond [(integer? y) (and (integer? x) (< -1 x y))]
-        [(pair? y) (or (≤? x (car y))
-                       (≤? x (cdr y))
-                       #;(and (pair? x)
-                            (or (<?:default (car x) (car y))
-                                (<?:default (cdr x) (cdr y)))))]
-        [(mpair? y) (or (≤? x (mcar y))
-                        (≤? x (mcdr y))
-                        #;(and (mpair? x)
-                             (or (<?:default (mcar x) (mcar y))
-                                 (<?:default (mcdr x) (mcdr y)))))]
-        [else #f]))
+  (cond [(integer? y) (and (integer? x) (< (abs x) (abs y)))]
+        [(pair? y)
+         (or (and (list? x) (list? y) (< (length x) (length y)))
+             (≤? x (car y))
+             (≤? x (cdr y)))]
+        [(mpair? y) (or (≤? x (mcar y)) (≤? x (mcdr y)))]
+        [else (and (not x) y #t)]))
 
 (define-parameter <? : (Any Any → Boolean) <?:default)

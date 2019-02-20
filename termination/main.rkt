@@ -12,6 +12,7 @@
 (require (for-syntax racket/base
                      racket/syntax
                      syntax/parse
+                     racket/pretty
                      "syntax-utils.rkt")
          racket/unsafe/ops
          "runtime-utils.rkt"
