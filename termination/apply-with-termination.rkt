@@ -18,13 +18,21 @@
                 [sc-graphs : (Listof SC-Graph)])
   #:transparent)
 
-(define hash-procedure! : (Procedure → Integer)
+(define-values (hash-procedure! unhash-procedure)
   (let ([procedure-hashes : (HashTable Procedure Integer) (make-hasheq)]
         [next-id : Integer 0]
         [MAX-PROCEDURE-COUNT 1024])
-    (λ (f)
-      (hash-ref! procedure-hashes f
-                 (λ () (begin0 next-id (set! next-id (modulo (+ 1 next-id) MAX-PROCEDURE-COUNT))))))))
+    (values
+     (λ ([f : Procedure])
+       (hash-ref! procedure-hashes f
+                  (λ () (begin0 next-id (set! next-id (modulo (+ 1 next-id) MAX-PROCEDURE-COUNT))))))
+     ;; This is only needed for a nicer error message when an error is raised.
+     ;; It's ok to be slow.
+     ;; Maintaining a "reverse hash" would have slowed down the normal execution.
+     (λ ([i : Integer])
+       (for/list : (Listof Procedure) ([(p j) (in-hash procedure-hashes)]
+                                       #:when (eq? i j))
+         p)))))
 
 ;; A Call-Stack maps each function to the prefix that result in it, modulo loops
 ;; Conceptually, it is an associated list of ⟨function, prefix⟩ that supports constant-time lookup
@@ -93,9 +101,17 @@
                  (match-lambda
                    [(cons p h) (hash-count (car h))])
                  (hash->list cs))))
-         (cons (format "  * ~a" top) (go (car (hash-ref cs top))))])))
+         (cons (format "  * ~a" (show-proc top)) (go (car (hash-ref cs top))))])))
+  (define (show-proc [h : Integer])
+    (match (unhash-procedure h)
+      [(list p) p]
+      [ps (string-join (for/list : (Listof String) ([p (in-list ps)])
+                         (format "~a" p))
+                       " "
+                       #:before-first "{"
+                       #:after-last "}")]))
   (define lines
-    `(,(format "Recursive call to code point `~a` has no obvious descendence on any argument" f:hash)
+    `(,(format "Recursive call to code point `~a` has no obvious descendence on any argument" (show-proc f:hash))
       "- Preceding call:"  ,@(args->lines xs₀)
       "- Subsequent call:" ,@(args->lines xs)
       "New graph:" ,@(graph->lines G)

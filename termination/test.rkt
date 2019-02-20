@@ -3,6 +3,7 @@
 (require racket/match
          racket/function
          racket/list
+         racket/splicing
          rackunit
          "main.rkt")
 
@@ -67,7 +68,10 @@
   (define -two `((,-plus ,-one) ,-one)) 
 
   ;; ≺ : (U e ρ) (U e ρ) → Boolean
-  (define (≺ x y)
+  (splicing-local
+      ;; The custom order doesn't need to escape instrumentation,
+      ;; But instrumenting this tight loop significantly slows down this supposedly quick test
+      ((define-syntax-rule (#%app f x ...) (#%plain-app f x ...)))
     ;; Check if `e₁`'s node count is strictly smaller than `e₂`'s
     (define (e≺ e₁ e₂)
       (define size
@@ -75,15 +79,15 @@
           [`(λ ,_ ,e) (+ 1 (size e))]
           [(? symbol? x) 1]
           [`(,e₁ ,e₂) (+ (size e₁) (size e₂))]))
-      (< (size x) (size y)))
+      (< (size e₁) (size e₂)))
     ;; Check if `ρ₁` is strictly a sub-structure of `ρ₂`
     (define (ρ≺ ρ₁ ρ₂)
       (for/or ([v (in-hash-values ρ₂)])
         (define ρ* (cdr v))
         (or (equal? ρ₁ ρ*) (ρ≺ ρ₁ ρ*))))
-    
-    (or (and (hash? x) (hash? y)             (ρ≺ x y))            
-        (and (not (hash? x)) (not (hash? y)) (e≺ x y))))
+    (define (≺ x y)
+      (or (and (hash? x) (hash? y)             (ρ≺ x y))            
+          (and (not (hash? x)) (not (hash? y)) (e≺ x y)))))
 
   (with-custom-< ≺
     (begin/termination (ev '((λ (x) (x x)) (λ (y) y))))
