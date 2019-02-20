@@ -21,29 +21,26 @@ The more convenient method for testing the artifact is to download and run a
 virtual machine that contains the dynamic checker, static checker, tests, and all
 their dependencies.
 
-The image has been tested to work with Virtualbox `5.1.26`.
+The image has been tested to work with Virtualbox 6.0.
 Instructions for
 [downloading and installing Virtualbox](https://www.virtualbox.org/wiki/Downloads)
 can be found on the official site.
 
 1. Download the [OVA image](TODO link)
-(if you don't have a Dropbox account, **no need to sign up**,
+(if you don't have a Dropbox account, there is **no need to sign up**,
 just dismiss the sign-up dialog.)
 
 2. Launch the image: on most Linux or Windows desktops, double-clicking the file will do.
 Otherwise from Virtualbox, choose `File -> Import Appliance`. It is reccommended
 that you give the image at least `2048MB` of memory.
 
-3. The image runs Lubuntu 16.04 64bit with log-in information:
-
-  * Username: `reviewer`
-  * Password: `reviewer`
+3. The image runs Lubuntu 18.10 64bit that should log in automatically.
+   If for any reason it requires logging in, username and password are both `reviewer`.
 
 4. After the desktop loads, launch the terminal using the icon on the desktop.
 
 5. To automate *all* steps described in the next sections, execute:
 
-        cd artifact
         make
         
 An example of the expected output can be found at
@@ -51,7 +48,7 @@ An example of the expected output can be found at
 
 Below, we describe each step, along with the specific `make` target to just run
 that step.
-We assume the working directory is `/home/reviewer/artifact`
+We assume the working directory is `/home/reviewer/`
 
 ### Testing the dynamic termination checker
 
@@ -61,32 +58,55 @@ We assume the working directory is `/home/reviewer/artifact`
 
 The test suite contains many programs collected from other work.
 
-* To test the dynamic checker on the tests in `Table 1`, run:
-
-        make test-dynamic 
+* To test the dynamic checker on the tests in `Table 1`, run `make test-dynamic`.
+  Outputs are results of individual programs.
         
-* To generate the benchmark results in `Figure 10`, run:
-
-        make benchmark-dynamic
+* To generate the benchmark results in `Figure 10`, run `make benchmark-dynamic`.
+  If the machine has less that 4G of memory, some of the benchmarks may be aborted in the middle.
 
 ##### Checking results from other tools
 
 * To try Liquid Haskell, launch the browser with the default page set to
   [Liquid Haskell](http://goto.ucsd.edu:8090/index.html#?demo=blank.hs),
-  then try tests in [tests/LH/](TODO link)
+  then try tests in [tests/LH/](https://github.com/philnguyen/termination/tree/pldi-19-ae/termination/tests/LH).
+  Below are permalinks created for each test:
+  
+  + [sct-1](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550704801_16372.hs)
+  + [sct-2](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550704940_16374.hs)
+  + [sct-3](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550704966_16377.hs)
+  + [sct-4](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550704989_16379.hs)
+  + [sct-5](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705009_16381.hs)
+  + [sct-6](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705036_16383.hs)
+  + ~~ho-sct-ack~~
+  + [ho-sct-fg](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705083_16385.hs)
+  + [ho-sct-fold](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705103_16387.hs)
+  + [isabelle-perm](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705121_16389.hs)
+  + [isabelle-f](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705155_16392.hs)
+  + [isabelle-foo](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705177_16394.hs)
+  + [isabelle-bar](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705202_16397.hs)
+  + [isabelle-poly](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705219_16399.hs)
+  + [acl2-fig-2](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550704551_16364.hs)
+  + [acl2-fig-6](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550704641_16366.hs)
+  + [acl2-fig-7](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550704719_16370.hs)
+  + [lh-gcd](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705241_16401.hs)
+  + [lh-map](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705259_16403.hs)
+  + [lh-merge](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705279_16405.hs)
+  + [lh-range](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705334_16409.hs)
+  + [lh-tfact](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705307_16407.hs)
 
 * To try Isabbelle, launch the Isabelle icon on the Desktop, which should by default open tests in
-  [tests/Isabelle/](TODO link).
+  [tests/Isabelle/](https://github.com/philnguyen/termination/tree/pldi-19-ae/termination/tests/Isabelle).
+  Within Isabelle, double click on any test to view and start checking it.
 
 * To try ACL2, launch the Eclipse icon on the Desktop, which should by default open tests in
-  [tests/ACL2/](TODO link).
+  [tests/ACL2/](https://github.com/philnguyen/termination/tree/pldi-19-ae/termination/tests/ACL2).
+  The `.lisp` files contain the source, and the `.lisp.a2s` files contain checking result.
   
     
 #### Trying your own programs
 
-Directories [tests/Dyn](TODO link) and [tests/Dyn/buggy-versions](TODO link)
-contain many example of terminating and non-terminating programs, respectively,
-that use termination contracts.
+Directory [tests/Dyn](https://github.com/philnguyen/termination/tree/pldi-19-ae/termination/tests/Dyn)
+contains many example of that use termination contracts.
 
 To try the dynamic checker on your own Racket program,
 add `(require termination)` to the file. Then:
@@ -128,6 +148,7 @@ Below is one self-contained example:
 (fact -1) ; ==> error
 ```
 
+Racket programs can either be run from DrRacket or from the command line as `racket file-name.rkt`.
 
 ### Testing the static termination checker
 

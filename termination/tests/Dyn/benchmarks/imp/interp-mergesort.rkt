@@ -1085,9 +1085,10 @@
    '("one" "two" "three" "four" "five" "six"
            "seven" "eight" "nine" "ten" "eleven" "twelve")))
 
-(require "../../../../unsafe.rkt")
+(require "../../../../unsafe.rkt" "../common.rkt")
 (for ([N (in-range 10000 100001 10000)])
   (collect-garbage) (collect-garbage) (collect-garbage)
   (define expr (make-sort-expr (map symbol->string (build-list N (λ _ (gensym))))))
   (printf "interpreted mergesort ~a~n" N)
-  (time (begin/termination (scheme-eval expr))))
+  (time (with-custom-< ≺
+          (begin/termination (scheme-eval expr)))))
