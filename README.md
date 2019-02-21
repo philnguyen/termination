@@ -32,7 +32,7 @@ just dismiss the sign-up dialog.)
 
 2. Launch the image: on most Linux or Windows desktops, double-clicking the file will do.
 Otherwise from Virtualbox, choose `File -> Import Appliance`. It is reccommended
-that you give the image at least `2048MB` of memory.
+that you give the image at least `2G` of memory.
 
 3. The image runs Lubuntu 18.10 64bit that should log in automatically.
    If for any reason it requires logging in, username and password are both `reviewer`.
@@ -43,12 +43,12 @@ that you give the image at least `2048MB` of memory.
 
         make
         
+The script may take up to 30 minutes to finish.
 An example of the expected output can be found at
 [log.txt](https://github.com/philnguyen/termination/tree/pldi-19-ae/log.txt).
 
 Below, we describe each step, along with the specific `make` target to just run
 that step.
-We assume the working directory is `/home/reviewer/`
 
 ### Testing the dynamic termination checker
 
@@ -62,7 +62,7 @@ The test suite contains many programs collected from other work.
   Outputs are results of individual programs.
         
 * To generate the benchmark results in `Figure 10`, run `make benchmark-dynamic`.
-  If the machine has less that 4G of memory, some of the benchmarks may be aborted in the middle.
+  If the machine was given too little memory, some benchmarks may be aborted in the middle.
 
 ##### Checking results from other tools
 
@@ -98,7 +98,7 @@ The test suite contains many programs collected from other work.
   [tests/Isabelle/](https://github.com/philnguyen/termination/tree/pldi-19-ae/termination/tests/Isabelle).
   Within Isabelle, double click on any test to view and start checking it.
 
-* To try ACL2, launch the `ACL2` icon on the Desktop, which should by default open tests in
+* To try ACL2, launch the `ACL2.sh` icon on the Desktop, which should by default open tests cloned from
   [tests/ACL2/](https://github.com/philnguyen/termination/tree/pldi-19-ae/termination/tests/ACL2).
   The `.lisp` files contain the source, and the `.lisp.a2s` files contain checking result.
   
@@ -160,8 +160,8 @@ To run the static checker on tests in `Table 1`, run:
 
 #### Trying your own programs 
 
-Directories [tests/](TODO link) and [tests/buggy-versions](TODO link)
-contain many examples of terminating and non-terminating programs, respectively.
+Directory [tests/](https://github.com/philnguyen/soft-contract/tree/pldi-19-ae/soft-contract/tests)
+contains many examples of programs using total function contracts.
 
 For historical reasons, the dynamic and static systems were developed independently,
 and the syntax used in both systems are not identical.
@@ -183,6 +183,8 @@ Below is one self-contained example:
   [f (exact-nonnegative-integer? . -> . exact-nonnegative-integer? #:total? #t)])
 ```
 
+The static checker can be invoked on a file as a command-line tool as in `raco scv file-name.rkt`.
+
 ## Option 2: Build packages from source
 
 Before building the checkers,
@@ -191,20 +193,36 @@ The projects might not build with earlier releases.
 
 ### Building and installing the dynamic checker
 
-    git clone [TODO]
+    git clone https://github.com/philnguyen/termination.git
     cd termination/termination
     git checkout pldi-19-ae
     raco pkg install --deps search-auto
 
 The package `termination` is then available to be required in any Racket module.
-Remaining tests are similar to Option 1.
+Remaining tests are similar to [Option 1]((#option-1-obtain-the-self-contained-virtualbox-image)).
 
 ### Building and installing the static checker
 
-    git clone [TODO]
-    cd soft-contract/soft-contract
-    git checkout pldi-19-ae
-    raco pkg install --deps search-auto
+* Prerequisite: install Z3:
+
+    + Download and install [Z3](https://github.com/Z3Prover/z3/releases).
+    This project has been tested to work with Z3 `4.5.0`.
+    + Set the environment variable `Z3_LIB` to the directory containing
+     `libz3.dll`, `libz3.so`, or `libz3.dylib`, depending on the system being
+     Windows, Linux, or Mac, respectively.
+
+* Installing `soft-contract` package:
+
+    + In the rare case that you have a previous version of `soft-contract` installed, remove it first:
+    
+            raco pkg remove soft-contract
+            
+    + Clone and build the `soft-contract` repository:
+    
+            git clone https://github.com/philnguyen/soft-contract.git
+            cd soft-contract/soft-contract
+            git checkout pldi-19-ae
+            raco pkg install --deps search-auto
 
 The command `raco scv` is then available to be used.
-Remaining tests are similar to Option 1.
+Remaining tests are similar to [Option 1]((#option-1-obtain-the-self-contained-virtualbox-image)).
