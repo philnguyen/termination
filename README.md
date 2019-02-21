@@ -3,11 +3,10 @@ Artifact for "Size-change Termination as a Contract"
 =========================================
 
 This repository contains the artifact for the research done in the paper
-[*Size-change Termination as a Contract*]
-(https://github.com/philnguyen/termination/blob/pldi-19-ae/paper/main.pdf).
+[*Size-change Termination as a Contract*](https://github.com/philnguyen/termination/blob/pldi-19-ae/paper/main.pdf).
 
 There are three components to this artifact:
-* The dynamic termination checker, implemented as a language extension for Racket
+* The dynamic termination checker, implemented as a language extension in Racket
 * The static checker, implemented as a stand-alone command-line tool
 * The set of tests used in the paper
 
@@ -26,7 +25,7 @@ Instructions for
 [downloading and installing Virtualbox](https://www.virtualbox.org/wiki/Downloads)
 can be found on the official site.
 
-1. Download the [pldi-19-ae.ova](https://drive.google.com/file/d/16EJ5smrRmoX5LFA4XNZpT69GDmviz9Ua/view?usp=sharing).
+1. Download [pldi-19-ae.ova](https://drive.google.com/file/d/16EJ5smrRmoX5LFA4XNZpT69GDmviz9Ua/view?usp=sharing).
 
 2. Launch the image: on most Linux or Windows desktops, double-clicking the file will do.
 Otherwise from Virtualbox, choose `File -> Import Appliance`. It is reccommended
@@ -35,7 +34,7 @@ that you give the image at least `2G` of memory.
 3. The image runs Lubuntu 18.10 64bit that should log in automatically.
    If for any reason it requires logging in, username and password are both `reviewer`.
 
-4. After the desktop loads, launch the terminal using the icon on the desktop.
+4. After the desktop loads, launch the terminal using `Ctrl+Alt+t`.
 
 5. To automate *all* steps described in the next sections, execute:
 
@@ -56,10 +55,14 @@ that step.
 
 The test suite contains many programs collected from other work.
 
-* To test the dynamic checker on the tests in `Table 1`, run `make test-dynamic`.
+* To test the dynamic checker on the tests in `Table 1`, run
+
+        make test-dynamic
   Outputs are results of individual programs.
         
-* To generate the benchmark results in `Figure 10`, run `make benchmark-dynamic`.
+* To generate the benchmark results in `Figure 10`, run
+
+        make benchmark-dynamic
   If the machine was given too little memory, some benchmarks may be aborted in the middle.
 
 ##### Checking results from other tools
