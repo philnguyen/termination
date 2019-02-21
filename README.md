@@ -66,8 +66,8 @@ The test suite contains many programs collected from other work.
 
 ##### Checking results from other tools
 
-* To try Liquid Haskell, launch the browser with the default page set to
-  [Liquid Haskell](http://goto.ucsd.edu:8090/index.html#?demo=blank.hs),
+* To try Liquid Haskell, go to the
+  [online Liquid Haskell editor](http://goto.ucsd.edu:8090/index.html#?demo=blank.hs)
   then try tests in [tests/LH/](https://github.com/philnguyen/termination/tree/pldi-19-ae/termination/tests/LH).
   Below are permalinks created for each test:
   
