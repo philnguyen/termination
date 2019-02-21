@@ -3,8 +3,5 @@
 (define (sum n)
   (if (zero? n) 0 (+ n (sum (- n 1)))))
 
-(require termination)
-(for ([N (in-range 1000000 10000001 1000000)])
-  (collect-garbage) (collect-garbage) (collect-garbage)
-  (printf "sum ~a~n" N)
-  (time (begin/termination (sum N))))
+(require termination "../common.rkt")
+(run-bm [n 1000000] (begin/termination (sum n)))

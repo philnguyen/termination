@@ -71,34 +71,34 @@ The test suite contains many programs collected from other work.
   then try tests in [tests/LH/](https://github.com/philnguyen/termination/tree/pldi-19-ae/termination/tests/LH).
   Below are permalinks created for each test:
   
-  + [sct-1](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550704801_16372.hs)
-  + [sct-2](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550704940_16374.hs)
-  + [sct-3](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550704966_16377.hs)
-  + [sct-4](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550704989_16379.hs)
-  + [sct-5](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705009_16381.hs)
-  + [sct-6](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705036_16383.hs)
-  + ~~ho-sct-ack~~
-  + [ho-sct-fg](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705083_16385.hs)
-  + [ho-sct-fold](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705103_16387.hs)
-  + [isabelle-perm](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705121_16389.hs)
-  + [isabelle-f](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705155_16392.hs)
-  + [isabelle-foo](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705177_16394.hs)
-  + [isabelle-bar](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705202_16397.hs)
-  + [isabelle-poly](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705219_16399.hs)
-  + [acl2-fig-2](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550704551_16364.hs)
-  + [acl2-fig-6](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550704641_16366.hs)
-  + [acl2-fig-7](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550704719_16370.hs)
-  + [lh-gcd](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705241_16401.hs)
-  + [lh-map](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705259_16403.hs)
-  + [lh-merge](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705279_16405.hs)
-  + [lh-range](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705334_16409.hs)
-  + [lh-tfact](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705307_16407.hs)
+  + [sct-1](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550704801_16372.hs),
+    [sct-2](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550704940_16374.hs),
+    [sct-3](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550704966_16377.hs),
+    [sct-4](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550704989_16379.hs),
+    [sct-5](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705009_16381.hs),
+    [sct-6](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705036_16383.hs)
+  + ~~ho-sct-ack~~,
+    [ho-sct-fg](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705083_16385.hs),
+    [ho-sct-fold](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705103_16387.hs)
+  + [isabelle-perm](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705121_16389.hs),
+    [isabelle-f](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705155_16392.hs),
+    [isabelle-foo](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705177_16394.hs),
+    [isabelle-bar](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705202_16397.hs),
+    [isabelle-poly](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705219_16399.hs)
+  + [acl2-fig-2](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550704551_16364.hs),
+    [acl2-fig-6](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550704641_16366.hs),
+    [acl2-fig-7](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550704719_16370.hs)
+  + [lh-gcd](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705241_16401.hs),
+    [lh-map](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705259_16403.hs),
+    [lh-merge](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705279_16405.hs),
+    [lh-range](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705334_16409.hs),
+    [lh-tfact](http://goto.ucsd.edu:8090/index.html#?demo=permalink%2F1550705307_16407.hs)
 
-* To try Isabbelle, launch the Isabelle icon on the Desktop, which should by default open tests in
+* To try Isabbelle, double-click the `Isabelle.sh` icon on the Desktop, which should by default open tests in
   [tests/Isabelle/](https://github.com/philnguyen/termination/tree/pldi-19-ae/termination/tests/Isabelle).
   Within Isabelle, double click on any test to view and start checking it.
 
-* To try ACL2, launch the Eclipse icon on the Desktop, which should by default open tests in
+* To try ACL2, launch the `ACL2` icon on the Desktop, which should by default open tests in
   [tests/ACL2/](https://github.com/philnguyen/termination/tree/pldi-19-ae/termination/tests/ACL2).
   The `.lisp` files contain the source, and the `.lisp.a2s` files contain checking result.
   

@@ -1059,8 +1059,5 @@
 
      (fact ,N)))
 
-(for ([N (in-range 10000 100001 10000)])
-  (collect-garbage) (collect-garbage) (collect-garbage)
-  (define expr (make-fact-expr N))
-  (printf "interpreted factorial ~a~n" N)
-  (time (scheme-eval expr)))
+(require "../common.rkt")
+(run-bm [n 10000] (scheme-eval (make-fact-expr n)))

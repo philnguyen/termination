@@ -24,9 +24,7 @@
   (loop obj))
 
 (require "../../../../unsafe.rkt" "../common.rkt")
-(for ([N (in-range 10000 100001 10000)])
-  (collect-garbage) (collect-garbage) (collect-garbage)
-  (define l (map symbol->string (build-list N (λ _ (gensym)))))
-  (printf "mergesort ~a~n" N)
-  (time (with-custom-< ≺
-          (begin/termination (sort-list l string<=?)))))
+(run-bm [N 10000]
+        (let ([l (map symbol->string (build-list N (λ _ (gensym))))])
+          (with-custom-< ≺
+            (begin/termination (sort-list l string<=?)))))

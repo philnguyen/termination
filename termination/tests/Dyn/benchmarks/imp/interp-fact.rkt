@@ -1059,9 +1059,5 @@
 
      (fact ,N)))
 
-(require "../../../../unsafe.rkt")
-(for ([N (in-range 10000 100001 10000)])
-  (collect-garbage) (collect-garbage) (collect-garbage)
-  (define expr (make-fact-expr N))
-  (printf "interpreted factorial ~a~n" N)
-  (time (begin/termination (scheme-eval expr))))
+(require "../../../../unsafe.rkt" "../common.rkt")
+(run-bm [N 10000] (begin/termination (scheme-eval (make-fact-expr N))))

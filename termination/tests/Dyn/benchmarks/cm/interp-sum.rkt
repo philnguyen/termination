@@ -1059,9 +1059,5 @@
 
      (sum ,N)))
 
-(require termination)
-(for ([N (in-range 1000000 10000001 1000000)])
-  (collect-garbage) (collect-garbage) (collect-garbage)
-  (define expr (make-sum-expr N))
-  (printf "interpreted sum ~a~n" N)
-  (time (begin/termination (scheme-eval expr))))
+(require termination "../common.rkt")
+(run-bm [n 1000000] (begin/termination (scheme-eval (make-sum-expr n))))

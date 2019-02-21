@@ -1085,8 +1085,5 @@
    '("one" "two" "three" "four" "five" "six"
            "seven" "eight" "nine" "ten" "eleven" "twelve")))
 
-(for ([N (in-range 10000 100001 10000)])
-  (collect-garbage) (collect-garbage) (collect-garbage)
-  (define expr (make-sort-expr (map symbol->string (build-list N (λ _ (gensym))))))
-  (printf "interpreted mergesort ~a~n" N)
-  (time (scheme-eval expr)))
+(require "../common.rkt")
+(run-bm [n 10000] (scheme-eval (make-sort-expr (map symbol->string (build-list n (λ _ (gensym)))))))

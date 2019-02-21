@@ -1,4 +1,5 @@
 #lang racket/base
+(require "../common.rkt")
 
 (define (sort-list obj pred)
 
@@ -23,8 +24,4 @@
 
   (loop obj))
 
-(for ([N (in-range 10000 100001 10000)])
-  (collect-garbage) (collect-garbage) (collect-garbage)
-  (define l (map symbol->string (build-list N (λ _ (gensym)))))
-  (printf "mergesort ~a~n" N)
-  (time (sort-list l string<=?)))
+(run-bm [n 10000] (sort-list (map symbol->string (build-list n (λ _ (gensym)))) string<=?))

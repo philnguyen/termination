@@ -13,7 +13,7 @@ and g :: "'a list \<Rightarrow> 'a \<Rightarrow> 'a list \<Rightarrow> 'a" where
 | "g a b c = f a (b # c)"
 *)
 datatype  tree  = L | N tree tree
-(*
+
 function f :: "tree \<Rightarrow> tree \<Rightarrow> tree" and
 g :: "tree \<Rightarrow> tree \<Rightarrow> tree \<Rightarrow> tree" where
   "f L x = x"
@@ -21,7 +21,7 @@ g :: "tree \<Rightarrow> tree \<Rightarrow> tree \<Rightarrow> tree" where
 | "g a b c = f a (N b c)"
   by pat_completeness auto
 termination by size_change
-*)                     
+
 (*
 function lft :: "tree \<Rightarrow> tree" where
 "lft (N a b) = a"
