@@ -26,9 +26,7 @@ Instructions for
 [downloading and installing Virtualbox](https://www.virtualbox.org/wiki/Downloads)
 can be found on the official site.
 
-1. Download the [OVA image](TODO link)
-(if you don't have a Dropbox account, there is **no need to sign up**,
-just dismiss the sign-up dialog.)
+1. Download the [pldi-19-ae.ova](https://drive.google.com/file/d/16EJ5smrRmoX5LFA4XNZpT69GDmviz9Ua/view?usp=sharing).
 
 2. Launch the image: on most Linux or Windows desktops, double-clicking the file will do.
 Otherwise from Virtualbox, choose `File -> Import Appliance`. It is reccommended
