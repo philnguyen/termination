@@ -29,7 +29,8 @@ can be found on the official site.
 
 2. Launch the image: on most Linux or Windows desktops, double-clicking the file will do.
 Otherwise from Virtualbox, choose `File -> Import Appliance`. It is reccommended
-that you give the image at least `2G` of memory.
+that you give the image at least `8G` of memory.
+Lower memory can still work fine for most sections except for the benchmarks.
 
 3. The image runs Lubuntu 18.10 64bit that should log in automatically.
    If for any reason it requires logging in, username and password are both `reviewer`.
@@ -201,6 +202,9 @@ The projects might not build with earlier releases.
 
 The package `termination` is then available to be required in any Racket module.
 Remaining tests are similar to [Option 1]((#option-1-obtain-the-self-contained-virtualbox-image)).
+To automate all the tests as in the previous section, under `termination/termination`, run:
+
+    make test benchmark
 
 ### Building and installing the static checker
 
@@ -227,3 +231,6 @@ Remaining tests are similar to [Option 1]((#option-1-obtain-the-self-contained-v
 
 The command `raco scv` is then available to be used.
 Remaining tests are similar to [Option 1]((#option-1-obtain-the-self-contained-virtualbox-image)).
+To automate all the tests as in the previous section, under `soft-contract/soft-contract`, run:
+
+    make test
