@@ -1,0 +1,449 @@
+Testing dynamic checker
+=========================================
+raco test: "termination/termination/tests/Dyn/acl2-fig-2.rkt"
+raco test: @(test-responsible '(pcn))
+0
+0
+0
+0
+raco test: "termination/termination/tests/Dyn/acl2-fig-6.rkt"
+raco test: @(test-responsible '(pcn))
+0
+0
+raco test: "termination/termination/tests/Dyn/acl2-fig-7.rkt"
+raco test: @(test-responsible '(pcn))
+2
+0
+raco test: "termination/termination/tests/Dyn/dderiv.rkt"
+raco test: @(test-responsible '(pcn))
+'(+ (* (* 3 x x) (+ (/ 0 3) (/ 1 x) (/ 1 x))) (* (* a x x) (+ (/ 0 a) (/ 1 x) (/ 1 x))) (* (* b x) (+ (/ 0 b) (/ 1 x))) 0)
+raco test: "termination/termination/tests/Dyn/deriv.rkt"
+raco test: @(test-responsible '(pcn))
+'(+ (* (* 3 x x) (+ (/ 0 3) (/ 1 x) (/ 1 x))) (* (* a x x) (+ (/ 0 a) (/ 1 x) (/ 1 x))) (* (* b x) (+ (/ 0 b) (/ 1 x))) 0)
+raco test: "termination/termination/tests/Dyn/destruct.rkt"
+raco test: @(test-responsible '(pcn))
+#t
+raco test: "termination/termination/tests/Dyn/div.rkt"
+raco test: @(test-responsible '(pcn))
+'(#<void> . #<void>)
+raco test: "termination/termination/tests/Dyn/ho-sct-ack.rkt"
+raco test: @(test-responsible '(pcn))
+13
+raco test: "termination/termination/tests/Dyn/ho-sct-fg.rkt"
+raco test: @(test-responsible '(pcn))
+#<procedure:...yn/ho-sct-fg.rkt:4:0>
+raco test: "termination/termination/tests/Dyn/ho-sct-fold.rkt"
+raco test: @(test-responsible '(pcn))
+'(((() . 1) . 2) . 3)
+'(4 5 6 1 2 3)
+'(7 8 9 4 5 6 1 2 3)
+raco test: "termination/termination/tests/Dyn/isabelle-bar.rkt"
+raco test: @(test-responsible '(pcn))
+0
+raco test: "termination/termination/tests/Dyn/isabelle-f.rkt"
+raco test: @(test-responsible '(pcn))
+0
+raco test: "termination/termination/tests/Dyn/isabelle-foo.rkt"
+raco test: @(test-responsible '(pcn))
+9
+raco test: "termination/termination/tests/Dyn/isabelle-perm.rkt"
+raco test: @(test-responsible '(pcn))
+7
+raco test: "termination/termination/tests/Dyn/isabelle-poly.rkt"
+raco test: @(test-responsible '(pcn))
+(Pinj 42 (Pc 42))
+raco test: "termination/termination/tests/Dyn/lh-gcd.rkt"
+raco test: @(test-responsible '(pcn))
+1
+raco test: "termination/termination/tests/Dyn/lh-map.rkt"
+raco test: @(test-responsible '(pcn))
+'(2 3 5)
+raco test: "termination/termination/tests/Dyn/lh-merge.rkt"
+raco test: @(test-responsible '(pcn))
+'(2 3 4 5 6)
+raco test: "termination/termination/tests/Dyn/lh-range.rkt"
+raco test: @(test-responsible '(pcn))
+'(2 3 4 5)
+raco test: "termination/termination/tests/Dyn/lh-tfact.rkt"
+raco test: @(test-responsible '(pcn))
+5
+raco test: "termination/termination/tests/Dyn/nfa.rkt"
+raco test: @(test-responsible '(pcn))
+'state4
+raco test: "termination/termination/tests/Dyn/scheme.rkt"
+raco test: @(test-responsible '(pcn))
+'("eight" "eleven" "five" "four" "nine" "one" "seven" "six" "ten" "three" "twelve" "two")
+raco test: "termination/termination/tests/Dyn/sct-1.rkt"
+raco test: @(test-responsible '(pcn))
+'(5 4 3 2 1)
+raco test: "termination/termination/tests/Dyn/sct-2.rkt"
+raco test: @(test-responsible '(pcn))
+'((((5 1 2 3 4) 2 3 4) 3 4) 4)
+'(((((5 . 6) 1 2 3 4) 2 3 4) 3 4) 4)
+raco test: "termination/termination/tests/Dyn/sct-3.rkt"
+raco test: @(test-responsible '(pcn))
+13
+raco test: "termination/termination/tests/Dyn/sct-4.rkt"
+raco test: @(test-responsible '(pcn))
+3
+raco test: "termination/termination/tests/Dyn/sct-5.rkt"
+raco test: @(test-responsible '(pcn))
+'(6)
+raco test: "termination/termination/tests/Dyn/sct-6.rkt"
+raco test: @(test-responsible '(pcn))
+'(3 2 1 4 5 6)
+'(3 2 1 4 5 6)
+raco test: "termination/termination/tests/Dyn/buggy-versions/acl2-fig-2.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/acl2-fig-6.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/acl2-fig-7.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/dderiv.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/deriv.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/destruct.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/div.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/ho-sct-ack.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/ho-sct-fg.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/ho-sct-fold.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/isabelle-bar.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/isabelle-f.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/isabelle-foo.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/isabelle-perm.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/isabelle-poly.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/lh-gcd.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/lh-map.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/lh-merge.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/lh-range.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/lh-tfact.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/nfa.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/scheme.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/sct-1.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/sct-2.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/sct-3.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/sct-4.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/sct-5.rkt"
+raco test: @(test-responsible '(pcn))
+raco test: "termination/termination/tests/Dyn/buggy-versions/sct-6.rkt"
+raco test: @(test-responsible '(pcn))
+37 tests passed
+Benchmarking dynamic checker
+=========================================
+## Factorial - unchecked
+10000: cpu time: 37 real time: 36 gc time: 11
+20000: cpu time: 170 real time: 170 gc time: 24
+30000: cpu time: 444 real time: 443 gc time: 67
+40000: cpu time: 1210 real time: 1207 gc time: 253
+50000: cpu time: 1455 real time: 1452 gc time: 254
+## Factorial - checked using continuation mark
+10000: cpu time: 52 real time: 52 gc time: 20
+20000: cpu time: 288 real time: 287 gc time: 65
+30000: cpu time: 981 real time: 980 gc time: 224
+40000: cpu time: 1701 real time: 1698 gc time: 431
+50000: cpu time: 1396 real time: 1394 gc time: 250
+## Factorial - checked using imperative updates
+10000: cpu time: 44 real time: 44 gc time: 18
+20000: cpu time: 357 real time: 357 gc time: 88
+30000: cpu time: 880 real time: 878 gc time: 184
+40000: cpu time: 1282 real time: 1279 gc time: 249
+50000: cpu time: 1543 real time: 1540 gc time: 216
+## Sum - unchecked
+1000000: cpu time: 37 real time: 38 gc time: 9
+2000000: cpu time: 112 real time: 112 gc time: 50
+3000000: cpu time: 137 real time: 137 gc time: 53
+4000000: cpu time: 180 real time: 180 gc time: 69
+5000000: cpu time: 306 real time: 305 gc time: 165
+## Sum - checked using continuation mark
+1000000: cpu time: 1189 real time: 1187 gc time: 589
+2000000: cpu time: 2880 real time: 2875 gc time: 1334
+3000000: cpu time: 5193 real time: 5187 gc time: 2307
+4000000: cpu time: 7778 real time: 7767 gc time: 3058
+5000000: cpu time: 14853 real time: 14833 gc time: 7247
+## Sum - checked using imperative update
+1000000: cpu time: 40 real time: 39 gc time: 8
+2000000: cpu time: 73 real time: 73 gc time: 18
+3000000: cpu time: 207 real time: 208 gc time: 120
+4000000: cpu time: 248 real time: 248 gc time: 131
+5000000: cpu time: 283 real time: 283 gc time: 138
+## Mergesort - unchecked
+10000: cpu time: 10 real time: 9 gc time: 1
+20000: cpu time: 22 real time: 22 gc time: 6
+30000: cpu time: 38 real time: 38 gc time: 10
+40000: cpu time: 52 real time: 51 gc time: 16
+50000: cpu time: 73 real time: 72 gc time: 19
+## Mergesort - checked using continuation mark
+10000: cpu time: 563 real time: 561 gc time: 11
+20000: cpu time: 1239 real time: 1236 gc time: 26
+30000: cpu time: 1756 real time: 1753 gc time: 52
+40000: cpu time: 2650 real time: 2646 gc time: 72
+50000: cpu time: 3188 real time: 3182 gc time: 85
+## Mergesort - checked using imperative update
+10000: cpu time: 8 real time: 8 gc time: 0
+20000: cpu time: 17 real time: 17 gc time: 0
+30000: cpu time: 28 real time: 28 gc time: 0
+40000: cpu time: 38 real time: 38 gc time: 6
+50000: cpu time: 55 real time: 54 gc time: 8
+## Interpreted Factorial - unchecked
+10000: cpu time: 41 real time: 40 gc time: 10
+20000: cpu time: 184 real time: 183 gc time: 27
+30000: cpu time: 487 real time: 487 gc time: 102
+40000: cpu time: 925 real time: 924 gc time: 188
+50000: cpu time: 1666 real time: 1663 gc time: 351
+## Interpreted Factorial - checked using continuation mark
+10000: cpu time: 151 real time: 152 gc time: 48
+20000: cpu time: 380 real time: 379 gc time: 66
+30000: cpu time: 1247 real time: 1244 gc time: 334
+40000: cpu time: 1277 real time: 1275 gc time: 254
+50000: cpu time: 2587 real time: 2583 gc time: 635
+## Interpreted Factorial - checked using imperative update
+10000: cpu time: 52 real time: 52 gc time: 23
+20000: cpu time: 349 real time: 349 gc time: 90
+30000: cpu time: 471 real time: 470 gc time: 66
+40000: cpu time: 1446 real time: 1444 gc time: 293
+50000: cpu time: 1570 real time: 1566 gc time: 313
+## Interpreted Sum - unchecked
+1000000: cpu time: 459 real time: 458 gc time: 77
+2000000: cpu time: 914 real time: 913 gc time: 165
+3000000: cpu time: 1398 real time: 1396 gc time: 228
+4000000: cpu time: 2022 real time: 2020 gc time: 430
+5000000: cpu time: 2340 real time: 2338 gc time: 426
+## Interpreted Sum - checked using continuation mark
+1000000: cpu time: 11689 real time: 11674 gc time: 3329
+2000000: cpu time: 23164 real time: 23134 gc time: 7641
+3000000: cpu time: 35293 real time: 35242 gc time: 10358
+4000000: cpu time: 50744 real time: 50674 gc time: 15244
+5000000: cpu time: 69177 real time: 69078 gc time: 23355
+## Interpreted Sum - checked using imperative update
+1000000: cpu time: 583 real time: 583 gc time: 174
+2000000: cpu time: 1124 real time: 1122 gc time: 317
+3000000: cpu time: 1524 real time: 1521 gc time: 329
+4000000: cpu time: 1939 real time: 1936 gc time: 378
+5000000: cpu time: 2630 real time: 2626 gc time: 638
+## Interpreted Mergesort - unchecked
+10000: cpu time: 59 real time: 59 gc time: 4
+20000: cpu time: 122 real time: 122 gc time: 12
+30000: cpu time: 202 real time: 201 gc time: 20
+40000: cpu time: 274 real time: 273 gc time: 26
+50000: cpu time: 375 real time: 374 gc time: 35
+## Interpreted Mergesort - checked using continuation mark
+10000: cpu time: 3968 real time: 3963 gc time: 112
+20000: cpu time: 8645 real time: 8634 gc time: 498
+30000: cpu time: 13254 real time: 13238 gc time: 829
+40000: cpu time: 18373 real time: 18350 gc time: 1251
+50000: cpu time: 24534 real time: 24500 gc time: 1877
+## Interpreted Mergesort - checked using imperative update
+10000: cpu time: 58 real time: 58 gc time: 0
+20000: cpu time: 116 real time: 115 gc time: 6
+30000: cpu time: 185 real time: 184 gc time: 12
+40000: cpu time: 258 real time: 257 gc time: 17
+50000: cpu time: 336 real time: 335 gc time: 23
+Outputting static checker's result on tests
+=========================================
+## checking soft-contract/soft-contract/tests/acl2-fig-2.rkt
+Found 4 possible SCT violations
+(1) /home/philnguyen0112/Projects/soft-contract/soft-contract/tests/acl2-fig-2.rkt:7:17
+    - Function: (λ (x) ...)
+    - Arguments:
+        * (+ x₆ 1)
+(2) /home/philnguyen0112/Projects/soft-contract/soft-contract/tests/acl2-fig-2.rkt:14:20
+    - Function: (λ (i j) ...)
+    - Arguments:
+        * {●_exact?_(>=/c 0)_number?_integer? 255}
+        * {●_exact?_(>=/c 0)_number?_integer? 255}
+(3) /home/philnguyen0112/Projects/soft-contract/soft-contract/tests/acl2-fig-2.rkt:8:14
+    - Function: (λ (x) ...)
+    - Arguments:
+        * (- x₆ 1)
+(4) /home/philnguyen0112/Projects/soft-contract/soft-contract/tests/acl2-fig-2.rkt:15:6
+    - Function: (λ (i j) ...)
+    - Arguments:
+        * {●_exact?_(>=/c 0)_number?_integer? 255}
+        * j₈
+## checking soft-contract/soft-contract/tests/acl2-fig-6.rkt
+Safe
+## checking soft-contract/soft-contract/tests/acl2-fig-7.rkt
+Found 2 possible SCT violations
+(1) /home/philnguyen0112/Projects/soft-contract/soft-contract/tests/acl2-fig-7.rkt:8:19
+    - Function: (λ (x) ...)
+    - Arguments:
+        * (quotient x₄ 2)
+(2) /home/philnguyen0112/Projects/soft-contract/soft-contract/tests/acl2-fig-7.rkt:7:28
+    - Function: (λ (x) ...)
+    - Arguments:
+        * (+ x₄ 1)
+## checking soft-contract/soft-contract/tests/dderiv.rkt
+Safe
+## checking soft-contract/soft-contract/tests/deriv.rkt
+Found 1 possible SCT violation
+(1) /home/philnguyen0112/Projects/soft-contract/soft-contract/tests/deriv.rkt:31:14
+    - Function: (λ (a₁) ...)
+    - Arguments:
+        * {(quote x) (cons α₁₇ α₁₈) 5 3 (cons α₂₅ α₂₆) (cons α₃₁ α₃₂)}
+## checking soft-contract/soft-contract/tests/destruct.rkt
+Found 2 possible SCT violations
+(1) /home/philnguyen0112/bin/racket/collects/racket/private/more-scheme.rkt:78:32
+    - Function: (λ (i a₁) ...)
+    - Arguments:
+        * (- i₈ 1)
+        * (cons α₁₇ α₁₈)
+(2) /home/philnguyen0112/bin/racket/collects/racket/private/more-scheme.rkt:78:32
+    - Function: (λ (j a₂) ...)
+    - Arguments:
+        * (- j₂₅ 1)
+        * (cons α₃₆ α₃₇)
+## checking soft-contract/soft-contract/tests/div.rkt
+Safe
+## checking soft-contract/soft-contract/tests/ho-sct-ack.rkt
+Found 2 possible SCT violations
+(1) /home/philnguyen0112/Projects/soft-contract/soft-contract/tests/ho-sct-ack.rkt:6:36
+    - Function: (λ (n) ...)
+    - Arguments:
+        * 1
+(2) /home/philnguyen0112/Projects/soft-contract/soft-contract/tests/ho-sct-ack.rkt:6:42
+    - Function: (λ (n) ...)
+    - Arguments:
+        * {2 ●_exact-positive-integer?_exact?_number?_integer? 3}
+## checking soft-contract/soft-contract/tests/ho-sct-fg.rkt
+Safe
+## checking soft-contract/soft-contract/tests/ho-sct-fold.rkt
+Safe
+## checking soft-contract/soft-contract/tests/isabelle-bar.rkt
+Found 1 possible SCT violation
+(1) /home/philnguyen0112/Projects/soft-contract/soft-contract/tests/isabelle-bar.rkt:6:33
+    - Function: (λ (v n m) ...)
+    - Arguments:
+        * m₄
+        * m₄
+        * m₄
+## checking soft-contract/soft-contract/tests/isabelle-f.rkt
+Found 1 possible SCT violation
+(1) /home/philnguyen0112/Projects/soft-contract/soft-contract/tests/isabelle-f.rkt:7:19
+    - Function: (λ (n m) ...)
+    - Arguments:
+        * m₄
+        * m₄
+## checking soft-contract/soft-contract/tests/isabelle-foo.rkt
+Found 2 possible SCT violations
+(1) /home/philnguyen0112/Projects/soft-contract/soft-contract/tests/isabelle-foo.rkt:8:35
+    - Function: (λ (flag? n m) ...)
+    - Arguments:
+        * #f
+        * (add1 n₅)
+        * (sub1 m₅)
+(2) /home/philnguyen0112/Projects/soft-contract/soft-contract/tests/isabelle-foo.rkt:7:31
+    - Function: (λ (flag? n m) ...)
+    - Arguments:
+        * #f
+        * 0
+        * m₅
+## checking soft-contract/soft-contract/tests/isabelle-perm.rkt
+Safe
+## checking soft-contract/soft-contract/tests/isabelle-poly.rkt
+Found 5 possible SCT violations
+(1) /home/philnguyen0112/Projects/soft-contract/soft-contract/tests/isabelle-poly.rkt:37:36
+    - Function: (λ (temp18 temp19) ...)
+    - Arguments:
+        * (Pc α₆₀)
+        * (Pinj α₆₁ α₆₂)
+(2) /home/philnguyen0112/Projects/soft-contract/soft-contract/tests/isabelle-poly.rkt:23:29
+    - Function: (λ (temp18 temp19) ...)
+    - Arguments:
+        * temp66₁₉
+        * temp79₄₈
+(3) /home/philnguyen0112/Projects/soft-contract/soft-contract/tests/isabelle-poly.rkt:25:28
+    - Function: (λ (temp18 temp19) ...)
+    - Arguments:
+        * (Pinj α₈₀ α₈₁)
+        * (Pinj α₈₂ α₈₃)
+(4) /home/philnguyen0112/Projects/soft-contract/soft-contract/tests/isabelle-poly.rkt:24:29
+    - Function: (λ (temp18 temp19) ...)
+    - Arguments:
+        * (Pinj α₈₄ α₈₅)
+        * temp79₄₈
+(5) /home/philnguyen0112/Projects/soft-contract/soft-contract/tests/isabelle-poly.rkt:20:32
+    - Function: (λ (temp18 temp19) ...)
+    - Arguments:
+        * temp96₄₅
+        * (Pc α₇₆)
+## checking soft-contract/soft-contract/tests/lh-gcd.rkt
+Found 1 possible SCT violation
+(1) /home/philnguyen0112/Projects/soft-contract/soft-contract/tests/lh-gcd.rkt:7:14
+    - Function: (λ (a b) ...)
+    - Arguments:
+        * b₄
+        * (modulo a₄ b₄)
+## checking soft-contract/soft-contract/tests/lh-map.rkt
+Safe
+## checking soft-contract/soft-contract/tests/lh-merge.rkt
+Safe
+## checking soft-contract/soft-contract/tests/lh-range.rkt
+Found 1 possible SCT violation
+(1) /home/philnguyen0112/Projects/soft-contract/soft-contract/tests/lh-range.rkt:6:28
+    - Function: (λ (lo hi) ...)
+    - Arguments:
+        * (add1 lo₄)
+        * hi₄
+## checking soft-contract/soft-contract/tests/lh-tfact.rkt
+Safe
+## checking soft-contract/soft-contract/tests/nfa.rkt
+Safe
+## checking soft-contract/soft-contract/tests/scheme.rkt
+Found 5 possible SCT violations
+(1) /home/philnguyen0112/Projects/soft-contract/soft-contract/tests/scheme.rkt:134:9
+    - Function: (λ (expr₂₆ env₄₀) ...)
+    - Arguments:
+        * form₂₁₃₄
+        * env₁₀₁₃₄
+(2) /home/philnguyen0112/Projects/soft-contract/soft-contract/tests/scheme.rkt:720:8
+    - Function: (λ (rte₅₃) ...)
+    - Arguments:
+        * rte₅₃₃₂₀
+(3) /home/philnguyen0112/Projects/soft-contract/soft-contract/tests/scheme.rkt:341:14
+    - Function: (λ (expr₂₆ env₄₀) ...)
+    - Arguments:
+        * (car l₆₁₉₉)
+        * env₂₅₁₉₉
+(4) /home/philnguyen0112/Projects/soft-contract/soft-contract/tests/scheme.rkt:330:14
+    - Function: (λ (expr₂₆ env₄₀) ...)
+    - Arguments:
+        * (car l₅₁₉₁)
+        * env₂₃₁₉₁
+(5) /home/philnguyen0112/Projects/soft-contract/soft-contract/tests/scheme.rkt:730:8
+    - Function: (λ (rte₅₄) ...)
+    - Arguments:
+        * rte₅₄₃₄₉
+## checking soft-contract/soft-contract/tests/sct-1.rkt
+Safe
+## checking soft-contract/soft-contract/tests/sct-2.rkt
+Safe
+## checking soft-contract/soft-contract/tests/sct-3.rkt
+Safe
+## checking soft-contract/soft-contract/tests/sct-4.rkt
+Safe
+## checking soft-contract/soft-contract/tests/sct-5.rkt
+Safe
+## checking soft-contract/soft-contract/tests/sct-6.rkt
+Safe
