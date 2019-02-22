@@ -20,39 +20,47 @@ The more convenient method for testing the artifact is to download and run a
 virtual machine that contains the dynamic checker, static checker, tests, and all
 their dependencies.
 
-The image has been tested to work with Virtualbox 6.0.
-Instructions for
-[downloading and installing Virtualbox](https://www.virtualbox.org/wiki/Downloads)
-can be found on the official site.
+## Getting Started Guide
 
-1. Download [pldi-19-ae.ova](https://drive.google.com/file/d/16EJ5smrRmoX5LFA4XNZpT69GDmviz9Ua/view?usp=sharing).
+0. Download [Virtualbox](https://www.virtualbox.org/wiki/Downloads) if you don't already have it.
+   The artifact has been tested to work with Virtualbox `6.0.4`.
+
+1. Download the artifact image [pldi-19-ae.ova](https://drive.google.com/file/d/16EJ5smrRmoX5LFA4XNZpT69GDmviz9Ua/view?usp=sharing).
 
 2. Launch the image: on most Linux or Windows desktops, double-clicking the file will do.
 Otherwise from Virtualbox, choose `File -> Import Appliance`. It is reccommended
 that you give the image at least `8G` of memory.
-Lower memory can still work fine for most sections except for the benchmarks.
+Lower memory can still work fine for most sections, except benchmarks may get aborted in the middle.
 
 3. The image runs Lubuntu 18.10 64bit that should log in automatically.
    If for any reason it requires logging in, username and password are both `reviewer`.
 
 4. After the desktop loads, launch the terminal using `Ctrl+Alt+t`.
 
-5. To automate *all* steps described in the next sections, execute:
+5. To perform quick small tests to make sure that the dynamic and static checkers are working,
+   and that the benchmarks are all available, execute:
+
+        make quick-tests
+   The output should be similar to that in [example-logs/quick-tests-log.txt](https://github.com/philnguyen/termination/tree/pldi-19-ae/example-logs/quick-tests-log.txt)
+
+## Step-by-step Instructions
+
+To automate *all* steps described in the next sections, execute:
 
         make
         
 The script may take up to 30 minutes to finish.
 An example of the expected output can be found at
-[log.txt](https://github.com/philnguyen/termination/tree/pldi-19-ae/log.txt).
+[example-logs/log.txt](https://github.com/philnguyen/termination/tree/pldi-19-ae/example-logs/log.txt).
 
 Below, we describe each step, along with the specific `make` target to just run
 that step.
 
-### Testing the dynamic termination checker
+#### Testing the dynamic termination checker
 
-#### Running the tests
+##### Running the tests
 
-##### Testing our tools
+###### Testing our tools
 
 The test suite contains many programs collected from other work.
 
@@ -66,7 +74,7 @@ The test suite contains many programs collected from other work.
         make benchmark-dynamic
   If the machine was given too little memory, some benchmarks may be aborted in the middle.
 
-##### Checking results from other tools
+###### Checking results from other tools
 
 * To try Liquid Haskell, go to the
   [online Liquid Haskell editor](http://goto.ucsd.edu:8090/index.html#?demo=blank.hs)
@@ -105,7 +113,7 @@ The test suite contains many programs collected from other work.
   The `.lisp` files contain the source, and the `.lisp.a2s` files contain checking result.
   
     
-#### Trying your own programs
+##### Trying your own programs
 
 Directory [tests/Dyn](https://github.com/philnguyen/termination/tree/pldi-19-ae/termination/tests/Dyn)
 contains many example of that use termination contracts.
@@ -152,15 +160,15 @@ Below is one self-contained example:
 
 Racket programs can either be run from DrRacket or from the command line as `racket file-name.rkt`.
 
-### Testing the static termination checker
+#### Testing the static termination checker
 
-#### Runing the tests
+##### Runing the tests
 
 To run the static checker on tests in `Table 1`, run:
 
     make test-static
 
-#### Trying your own programs 
+##### Trying your own programs 
 
 Directory [tests/](https://github.com/philnguyen/soft-contract/tree/pldi-19-ae/soft-contract/tests)
 contains many examples of programs using total function contracts.

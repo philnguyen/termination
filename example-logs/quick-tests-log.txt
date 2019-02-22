@@ -1,0 +1,173 @@
+Running quick tests for dynamic checker
+=========================================
+raco test: "termination/termination/test.rkt"
+raco test: @(test-responsible '(pcn))
+5
+'("eight" "eleven" "five" "four" "nine" "one" "seven" "six" "ten" "three" "twelve" "two")
+0
+7 tests passed
+Running quick tests for static checker
+=========================================
+checking soft-contract/soft-contract/tests/sct-1.rkt
+Safe
+checking soft-contract/soft-contract/tests/sct-2.rkt
+Safe
+checking soft-contract/soft-contract/tests/sct-3.rkt
+Safe
+checking soft-contract/soft-contract/tests/sct-4.rkt
+Safe
+checking soft-contract/soft-contract/tests/sct-5.rkt
+Safe
+checking soft-contract/soft-contract/tests/sct-6.rkt
+Safe
+Included tests:
+=========================================
+termination/termination/tests
+├── ACL2
+│   ├── acl2-fig-2.lisp
+│   ├── acl2-fig-6.lisp
+│   ├── acl2-fig-7.lisp
+│   ├── isabelle-bar.lisp
+│   ├── isabelle-f.lisp
+│   ├── isabelle-foo.lisp
+│   ├── isabelle-perm.lisp
+│   ├── isabelle-poly.lisp
+│   ├── lh-gcd.lisp
+│   ├── lh-merge.lisp
+│   ├── lh-range.lisp
+│   ├── lh-tfact.lisp
+│   ├── sct-1.lisp
+│   ├── sct-2.lisp
+│   ├── sct-3.lisp
+│   ├── sct-4.lisp
+│   ├── sct-5.lisp
+│   └── sct-6.lisp
+├── Dyn
+│   ├── acl2-fig-2.rkt
+│   ├── acl2-fig-6.rkt
+│   ├── acl2-fig-7.rkt
+│   ├── benchmarks
+│   │   ├── cm
+│   │   │   ├── fact.rkt
+│   │   │   ├── interp-fact.rkt
+│   │   │   ├── interp-mergesort.rkt
+│   │   │   ├── interp-sum.rkt
+│   │   │   ├── mergesort.rkt
+│   │   │   └── sum.rkt
+│   │   ├── common.rkt
+│   │   ├── imp
+│   │   │   ├── fact.rkt
+│   │   │   ├── interp-fact.rkt
+│   │   │   ├── interp-mergesort.rkt
+│   │   │   ├── interp-sum.rkt
+│   │   │   ├── mergesort.rkt
+│   │   │   └── sum.rkt
+│   │   └── unchecked
+│   │       ├── fact.rkt
+│   │       ├── interp-fact.rkt
+│   │       ├── interp-mergesort.rkt
+│   │       ├── interp-sum.rkt
+│   │       ├── mergesort.rkt
+│   │       └── sum.rkt
+│   ├── buggy-versions
+│   │   ├── acl2-fig-2.rkt
+│   │   ├── acl2-fig-6.rkt
+│   │   ├── acl2-fig-7.rkt
+│   │   ├── dderiv.rkt
+│   │   ├── deriv.rkt
+│   │   ├── destruct.rkt
+│   │   ├── div.rkt
+│   │   ├── ho-sct-ack.rkt
+│   │   ├── ho-sct-fg.rkt
+│   │   ├── ho-sct-fold.rkt
+│   │   ├── isabelle-bar.rkt
+│   │   ├── isabelle-foo.rkt
+│   │   ├── isabelle-f.rkt
+│   │   ├── isabelle-perm.rkt
+│   │   ├── isabelle-poly.rkt
+│   │   ├── lh-gcd.rkt
+│   │   ├── lh-map.rkt
+│   │   ├── lh-merge.rkt
+│   │   ├── lh-range.rkt
+│   │   ├── lh-tfact.rkt
+│   │   ├── nfa.rkt
+│   │   ├── scheme.rkt
+│   │   ├── sct-1.rkt
+│   │   ├── sct-2.rkt
+│   │   ├── sct-3.rkt
+│   │   ├── sct-4.rkt
+│   │   ├── sct-5.rkt
+│   │   └── sct-6.rkt
+│   ├── dderiv.rkt
+│   ├── deriv.rkt
+│   ├── destruct.rkt
+│   ├── div.rkt
+│   ├── ho-sct-ack.rkt
+│   ├── ho-sct-fg.rkt
+│   ├── ho-sct-fold.rkt
+│   ├── isabelle-bar.rkt
+│   ├── isabelle-foo.rkt
+│   ├── isabelle-f.rkt
+│   ├── isabelle-perm.rkt
+│   ├── isabelle-poly.rkt
+│   ├── lh-gcd.rkt
+│   ├── lh-map.rkt
+│   ├── lh-merge.rkt
+│   ├── lh-range.rkt
+│   ├── lh-tfact.rkt
+│   ├── nfa.rkt
+│   ├── scheme.rkt
+│   ├── sct-1.rkt
+│   ├── sct-2.rkt
+│   ├── sct-3.rkt
+│   ├── sct-4.rkt
+│   ├── sct-5.rkt
+│   └── sct-6.rkt
+├── Isabelle
+│   ├── Acl2_fig_2.thy
+│   ├── Acl2_fig_6.thy
+│   ├── Acl2_fig_7.thy
+│   ├── Ho_sct_ack.thy
+│   ├── Ho_sct_fg.thy
+│   ├── Ho_sct_fold.thy
+│   ├── Isabelle_bar.thy
+│   ├── Isabelle_foo.thy
+│   ├── Isabelle_f.thy
+│   ├── Isabelle_perm.thy
+│   ├── Isabelle_poly.thy
+│   ├── Lh_gcd.thy
+│   ├── Lh_map.thy
+│   ├── Lh_merge.thy
+│   ├── Lh_range.thy
+│   ├── Lh_tfact.thy
+│   ├── Sct_1.thy
+│   ├── Sct_2.thy
+│   ├── Sct_3.thy
+│   ├── Sct_4.thy
+│   ├── Sct_5.thy
+│   └── Sct_6.thy
+└── LH
+    ├── Acl2_fig_2.hs
+    ├── Acl2_fig_6.hs
+    ├── Acl2_fig_7.hs
+    ├── Ho_sct_ack.hs
+    ├── Ho_sct_fg.hs
+    ├── Ho_sct_fold.hs
+    ├── Isabelle_bar.hs
+    ├── Isabelle_f.hs
+    ├── Isabelle_foo.hs
+    ├── Isabelle_perm.hs
+    ├── Isabelle_poly.hs
+    ├── Lh_gcd.hs
+    ├── Lh_map.hs
+    ├── Lh_merge.hs
+    ├── Lh_range.hs
+    ├── Lh_tfact.hs
+    ├── Sct_1.hs
+    ├── Sct_2.hs
+    ├── Sct_3.hs
+    ├── Sct_4.hs
+    ├── Sct_5.hs
+    └── Sct_6.hs
+
+9 directories, 137 files
