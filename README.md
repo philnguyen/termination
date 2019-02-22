@@ -25,7 +25,7 @@ their dependencies.
 0. Download [Virtualbox](https://www.virtualbox.org/wiki/Downloads) if you don't already have it.
    The artifact has been tested to work with Virtualbox `6.0.4`.
 
-1. Download the artifact image [pldi-19-ae.ova](https://drive.google.com/file/d/16EJ5smrRmoX5LFA4XNZpT69GDmviz9Ua/view?usp=sharing).
+1. Download the artifact image [paper_654.ova](https://drive.google.com/file/d/15-RF4E3FYOnKY466YGuYHAW83zUl_8k8/view?usp=sharing).
 
 2. Launch the image: on most Linux or Windows desktops, double-clicking the file will do.
 Otherwise from Virtualbox, choose `File -> Import Appliance`. It is reccommended
