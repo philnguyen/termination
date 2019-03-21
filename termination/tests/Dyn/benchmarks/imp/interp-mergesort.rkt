@@ -1,4 +1,4 @@
-#lang racket/base
+#lang s-exp "../../../../unsafe.rkt"
 
 ;; Like "scheme.ss", but avoids `set-cdr!'. The main change is that
 ;;  a global variable is a 1-slot vector instead of a pair. (The
@@ -1085,7 +1085,7 @@
    '("one" "two" "three" "four" "five" "six"
            "seven" "eight" "nine" "ten" "eleven" "twelve")))
 
-(require "../../../../unsafe.rkt" "../common.rkt")
+(require "../common.rkt")
 (run-bm [N 10000]
         (let ([expr (make-sort-expr (map symbol->string (build-list N (λ _ (gensym)))))])
           (with-custom-< ≺

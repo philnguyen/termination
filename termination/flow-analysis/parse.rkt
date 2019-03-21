@@ -123,7 +123,7 @@
        [(free-id-set-member? (top-level-ids) #'x) (Top-Ref x-name)]
        [else (Prim x-name)])] 
     [e
-     (printf "don't know how to parse ~a~n" (syntax->datum #'e))
+     (log-warning "don't know how to parse ~a~n" (syntax->datum #'e))
      (Opq)]))
 
 (define top-level-ids (make-parameter #f))

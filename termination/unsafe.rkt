@@ -133,7 +133,7 @@
             (match-define-values (app? (cons f xs))
                                  (parameterize ([app-later? #t])
                                    (on-exprs (syntax->list #'(fun arg ...)))))
-            (with-syntax ([-apply (if (app-later?) #'apply/guard/restore #'apply/guard)])
+            (with-syntax ([-apply #'apply/guard/restore])
               (values #t #`(-apply (unsafe-struct-ref #,f 0) #,@xs)))]
            ;; When function can be loop entry
            [_
@@ -142,7 +142,7 @@
                                  (parameterize ([app-later? #t])
                                    (on-exprs (syntax->list #'(fun arg ...)))))
             (match-define-values ((cons f xs) bnds) (gen-bindings fun-arg))
-            (with-syntax ([-apply (if (app-later?) #'apply/guard/restore #'apply/guard)])
+            (with-syntax ([-apply #'apply/guard/restore])
               (values #t
                       (with-let bnds
                         (let ([tags (hash-ref (app-tags) (syntax-loc #'app))])

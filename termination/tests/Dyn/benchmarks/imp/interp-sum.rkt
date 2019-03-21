@@ -1,4 +1,4 @@
-#lang racket/base
+#lang s-exp "../../../../unsafe.rkt"
 
 ;; Like "scheme.ss", but avoids `set-cdr!'. The main change is that
 ;;  a global variable is a 1-slot vector instead of a pair. (The
@@ -1059,5 +1059,5 @@
 
      (sum ,N)))
 
-(require "../../../../unsafe.rkt" "../common.rkt")
+(require "../common.rkt")
 (run-bm [N 1000000] (begin/termination (scheme-eval (make-sum-expr N))))

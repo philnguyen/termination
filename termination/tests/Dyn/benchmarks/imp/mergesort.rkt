@@ -1,4 +1,4 @@
-#lang racket/base
+#lang s-exp "../../../../unsafe.rkt"
 
 (define (sort-list obj pred)
 
@@ -23,7 +23,7 @@
 
   (loop obj))
 
-(require "../../../../unsafe.rkt" "../common.rkt")
+(require "../common.rkt")
 (run-bm [N 10000]
         (let ([l (map symbol->string (build-list N (λ _ (gensym))))])
           (with-custom-< ≺

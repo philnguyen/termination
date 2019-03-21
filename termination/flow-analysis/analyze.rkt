@@ -26,7 +26,7 @@
 (define (analyze M)
   (define ith : Integer 1)
   (let loop ([$ : $ (hash)] [Σ : Σ (hash)] [G : G (hash)])
-    (begin (printf "iter ~a~n" ith)
+    (begin (log-debug "iter ~a~n" ith)
            (set! ith (+ 1 ith)))
     (define-values ($* Σ* G*) (ev-M $ (hash) Σ G M))
     (if (and (equal? $ $*) (equal? Σ Σ*) (equal? G G*))
