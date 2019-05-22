@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/philnguyen/termination.svg?branch=pldi-19-ae)](https://travis-ci.org/philnguyen/termination)
+[![Build Status](https://travis-ci.org/philnguyen/termination.svg?branch=master)](https://travis-ci.org/philnguyen/termination)
 Artifact for "Size-change Termination as a Contract"
 =========================================
 
