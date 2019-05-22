@@ -90,7 +90,7 @@
       (format "  * ~a ~a ~a" (car edge) ↝ (cdr edge))))
   (define (args->lines [xs : (Listof Any)])
     (for/list : (Listof String) ([(x i) (in-indexed xs)])
-      (format "  * arg ~a: ~a" i x)))
+      (format "  * ~a arg: ~a" (ith i) x)))
   (define (stack->lines)
     (let go : (Listof String) ([cs : Call-Stack (call-stack)])
       (cond
@@ -111,10 +111,19 @@
                        #:before-first "{"
                        #:after-last "}")]))
   (define lines
-    `(,(format "Recursive call to code point `~a` has no obvious descendence on any argument" (show-proc f:hash))
+    `(,(format "Recursive call to `~a` has no obvious descent on any argument" (show-proc f:hash))
       "- Preceding call:"  ,@(args->lines xs₀)
       "- Subsequent call:" ,@(args->lines xs)
       "New graph:" ,@(graph->lines G)
       "Size-change violating graph:" ,@(graph->lines G-err)
       "Call stack:" ,@(stack->lines)))
   (error 'possible-non-termination (string-join lines "\n")))
+
+(: ith : Integer → String)
+(define (ith i*)
+  (define i (+ 1 i*))
+  (format "~a~a" i (case (remainder i 10)
+                     [(1)  'st]
+                     [(2)  'nd]
+                     [(3)  'rd]
+                     [else 'th])))
