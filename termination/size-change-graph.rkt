@@ -69,8 +69,7 @@
   (define (≤? x y) (or (equal? x y) (<?:default x y)))
   (cond [(integer? y) (and (integer? x) (< (abs x) (abs y)))]
         [(pair? y)
-         (or (and (list? x) (list? y) (< (length x) (length y)))
-             (≤? x (car y))
+         (or (≤? x (car y))
              (≤? x (cdr y)))]
         [(mpair? y) (or (≤? x (mcar y)) (≤? x (mcdr y)))]
         [else (and (not x) y #t)]))

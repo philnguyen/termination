@@ -4,6 +4,7 @@
          racket/function
          racket/list
          racket/splicing
+         racket/bool
          rackunit
          "main.rkt")
 
@@ -148,3 +149,56 @@
   (check-exn exn? (λ () (f 1 2 3)))
   (define/termination (g x y) (g y x))
   (check-exn exn? (λ () (g 1 2))))
+
+;; This is a terminating program, but not by SCT without further annotations
+(let ()
+  ; graph as an adjacency list
+  (define g1 '((a b 1) (a c 3) (b c 1) (b d 5) (c d 2)))
+
+  (define/termination (list-union l1 l2)
+    (remove-duplicates (append l1 l2)))
+
+  ; possibly broken on self-edges
+  (define/termination (vertices-of-edge e)
+    (list (car e) (cadr e)))
+
+  (define/termination (vertices E)
+    (foldr list-union '() (map vertices-of-edge E)))
+
+  (define/termination (edge-from? v e)
+    (or (equal? v (car e))
+        (equal? v (cadr e))))
+
+  (define/termination (edges-from v E)
+    (filter (edge-from? v) E))
+
+  ; trees are just lists holding vertices and an adjacency list
+  ; INVARIANT: edges should all be in the vertex list
+  ; we need this slightly funny representation to account for trees with just one vertex (our starting case)
+  (define/termination (tree-vertices T) (car T))
+  (define/termination (tree-edges T) (cadr T))
+
+  (define/termination (in-tree? v T)
+    (member v (tree-vertices T)))
+
+  (define/termination ((edge-out-of-tree? T) e)
+    (xor (in-tree? (car e) T)
+         (in-tree? (cadr e) T)))
+
+  (define/termination (add-edge-to-tree e T)
+    (list (list-union (vertices-of-edge e) (tree-vertices T))
+          (cons e (tree-edges T))))
+
+  (define/termination (prims-loop T E)
+    (let ([outbound (filter (edge-out-of-tree? T) E)])
+      (printf "prims-loop\n\t~a\n\t~a\n\n" T outbound)
+      (if (null? outbound)
+          T
+          (let ([best (argmin caddr outbound)])
+            (prims-loop (add-edge-to-tree best T) E)))))
+
+  (define/termination (prims E)
+    (define init (car (shuffle (vertices E))))
+    (prims-loop `((,init) ()) E))
+
+  (check-exn exn? (λ () (prims g1))))
