@@ -14,10 +14,15 @@
                      syntax/parse
                      racket/pretty
                      "syntax-utils.rkt")
+         racket/contract/base
          racket/unsafe/ops
          "runtime-utils.rkt"
          "apply-with-termination.rkt"
          )
+
+(provide
+ (contract-out
+  [argument-transformer (parameter/c (list? . -> . list?))]))
 
 (define-syntax define/termination
   (syntax-parser

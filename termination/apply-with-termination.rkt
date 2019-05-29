@@ -4,7 +4,8 @@
 (require typed/racket/unsafe)
 (unsafe-provide apply/termination
                 divergence-ok?
-                with-<?)
+                with-<?
+                argument-transformer)
 
 (require racket/match
          racket/list
@@ -47,6 +48,9 @@
 ;; When termination checking starts, it always pushes to the call-stack.
 (define (divergence-ok?) (eq? mt-call-stack (call-stack)))
 
+;; Custom function for transforming argument list
+(define argument-transformer ((inst make-parameter ((Listof Any) → (Listof Any))) values))
+
 (: apply/termination (∀ (X Y) (X * → Y) X * → Y))
 ;; Mark size-change progress before executing the body
 (define (apply/termination f . xs)
@@ -64,10 +68,12 @@
            (define n (add1 n₀))
            ;; If the `n`th iteration is a power of 2, guard against size-change violation
            ;; otherwise use old record
-           (define r (if (zero? (unsafe-fxand n n₀)) (update-record r₀ f:hash xs) r₀))
+           (define r (if (zero? (unsafe-fxand n n₀))
+                         (update-record r₀ f:hash ((argument-transformer) xs))
+                         r₀))
            (cons n r)]
           ;; No previous record. This is the 2nd iteration.
-          [_ (cons 1 (Record xs '()))]))]
+          [_ (cons 1 (Record ((argument-transformer) xs) '()))]))]
       ;; Function is not a loop entry
       [_ (values cs #f)]))
   ;; Proceed with current function pushed on stack
