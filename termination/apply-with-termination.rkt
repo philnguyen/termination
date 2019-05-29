@@ -15,6 +15,9 @@
          "flattened-parameter.rkt"
          "size-change-graph.rkt")
 
+(require/typed racket/syntax
+  [format-symbol (String (U String Symbol Number) * → Symbol)])
+
 (struct Record ([last-examined-args : (Listof Any)]
                 [sc-graphs : (Listof SC-Graph)])
   #:transparent)
@@ -51,6 +54,8 @@
 ;; Custom function for transforming argument list
 (define argument-transformer ((inst make-parameter ((Listof Any) → (Listof Any))) values))
 
+(define-logger termination)
+
 (: apply/termination (∀ (X Y) (X * → Y) X * → Y))
 ;; Mark size-change progress before executing the body
 (define (apply/termination f . xs)
@@ -69,7 +74,10 @@
            ;; If the `n`th iteration is a power of 2, guard against size-change violation
            ;; otherwise use old record
            (define r (if (zero? (unsafe-fxand n n₀))
-                         (update-record r₀ f:hash ((argument-transformer) xs))
+                         (let ([r (update-record r₀ f:hash ((argument-transformer) xs))])
+                           (log-termination-debug "successful call at depth ~a of ~a:~n  ~a~n"
+                                                  n f (map show-sc-graph (Record-sc-graphs r)))
+                           r)
                          r₀))
            (cons n r)]
           ;; No previous record. This is the 2nd iteration.
@@ -125,11 +133,21 @@
       "Call stack:" ,@(stack->lines)))
   (error 'possible-non-termination (string-join lines "\n")))
 
-(: ith : Integer → String)
+(: ith : Integer → Symbol)
 (define (ith i*)
   (define i (+ 1 i*))
-  (format "~a~a" i (case (remainder i 10)
-                     [(1)  'st]
-                     [(2)  'nd]
-                     [(3)  'rd]
-                     [else 'th])))
+  (format-symbol "~a~a"
+                 i
+                 (case i
+                   [(11 12 13) 'th]
+                   [else (case (remainder i 10)
+                           [(1)  'st]
+                           [(2)  'nd]
+                           [(3)  'rd]
+                           [else 'th])])))
+
+(: show-sc-graph : SC-Graph → (Listof Sexp))
+(define (show-sc-graph g)
+  (for/list : (Listof Sexp) ([(edge dec) (in-hash g)])
+    (match-define (cons src tgt) edge)
+    `(,(ith src) ,dec ,(ith tgt))))
