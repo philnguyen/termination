@@ -203,8 +203,8 @@
 
   (check-exn exn? (λ () (prims g1)))
 
-  (parameterize ([argument-transformer
-                  ;; Ignore the actual arguments and count remaining edges in pool
-                  (match-lambda
-                    [(list (list _ T) E) (list (- (length E) (length T)))])])
+  (with-argument-transformers ([prims-loop
+                                ;; Ignore the actual arguments and count remaining edges in pool
+                                (match-lambda
+                                  [(list (list _ T) E) (list (- (length E) (length T)))])])
     (prims g1)))

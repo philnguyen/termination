@@ -5,7 +5,7 @@
 (unsafe-provide apply/termination
                 divergence-ok?
                 with-<?
-                argument-transformer)
+                argument-transformers)
 
 (require racket/match
          racket/list
@@ -51,10 +51,15 @@
 ;; When termination checking starts, it always pushes to the call-stack.
 (define (divergence-ok?) (eq? mt-call-stack (call-stack)))
 
-;; Custom function for transforming argument list
-(define argument-transformer ((inst make-parameter ((Listof Any) → (Listof Any))) values))
+(define argument-transformers
+  ((inst make-parameter (Immutable-HashTable Procedure ((Listof Any) → (Listof Any))))
+   (hasheq)))
 
 (define-logger termination)
+
+(: transform-args : Procedure (Listof Any) → (Listof Any))
+(define (transform-args f xs)
+  ((hash-ref (argument-transformers) f (λ () values)) xs))
 
 (: apply/termination (∀ (X Y) (X * → Y) X * → Y))
 ;; Mark size-change progress before executing the body
@@ -74,14 +79,14 @@
            ;; If the `n`th iteration is a power of 2, guard against size-change violation
            ;; otherwise use old record
            (define r (if (zero? (unsafe-fxand n n₀))
-                         (let ([r (update-record r₀ f:hash ((argument-transformer) xs))])
+                         (let ([r (update-record r₀ f:hash (transform-args f xs))])
                            (log-termination-debug "successful call at depth ~a of ~a:~n  ~a~n"
                                                   n f (map show-sc-graph (Record-sc-graphs r)))
                            r)
                          r₀))
            (cons n r)]
           ;; No previous record. This is the 2nd iteration.
-          [_ (cons 1 (Record ((argument-transformer) xs) '()))]))]
+          [_ (cons 1 (Record (transform-args f xs) '()))]))]
       ;; Function is not a loop entry
       [_ (values cs #f)]))
   ;; Proceed with current function pushed on stack
